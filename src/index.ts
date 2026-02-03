@@ -6,6 +6,7 @@ import * as sites from "./tools/sites.js";
 import * as sitemaps from "./tools/sitemaps.js";
 import * as analytics from "./tools/analytics.js";
 import * as inspection from "./tools/inspection.js";
+import * as pagespeed from "./tools/pagespeed.js";
 import { formatError } from "./errors.js";
 
 const server = new McpServer({
@@ -277,6 +278,44 @@ server.tool(
   async ({ siteUrl, inspectionUrl, languageCode }) => {
     try {
       const result = await inspection.inspectUrl(siteUrl, inspectionUrl, languageCode);
+      return {
+        content: [{ type: "text", text: JSON.stringify(result, null, 2) }]
+      };
+    } catch (error) {
+      return formatError(error);
+    }
+  }
+);
+
+// PageSpeed Insights Tools
+server.tool(
+  "pagespeed_analyze",
+  "Run PageSpeed Insights analysis on a URL to get performance, accessibility, best practices, and SEO scores",
+  {
+    url: z.string().describe("The URL to analyze"),
+    strategy: z.enum(["mobile", "desktop"]).optional().describe("Device strategy (default: mobile)")
+  },
+  async ({ url, strategy }) => {
+    try {
+      const result = await pagespeed.analyzePageSpeed(url, strategy || 'mobile');
+      return {
+        content: [{ type: "text", text: JSON.stringify(result, null, 2) }]
+      };
+    } catch (error) {
+      return formatError(error);
+    }
+  }
+);
+
+server.tool(
+  "pagespeed_core_web_vitals",
+  "Get Core Web Vitals for both mobile and desktop including LCP, FID, CLS, FCP, TTI, and TBT",
+  {
+    url: z.string().describe("The URL to analyze")
+  },
+  async ({ url }) => {
+    try {
+      const result = await pagespeed.getCoreWebVitals(url);
       return {
         content: [{ type: "text", text: JSON.stringify(result, null, 2) }]
       };

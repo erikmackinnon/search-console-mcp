@@ -38,6 +38,12 @@ This document outlines the planned features and improvements for this project.
 - `sitemaps://list/{siteUrl}` - List sitemaps for a site
 - `analytics://summary/{siteUrl}` - Performance summary for a site
 
+### v1.5.0 - CI/CD & PageSpeed Integration
+- GitHub Actions CI workflow (Node 18/20/22)
+- Automated npm publish on release
+- `pagespeed_analyze` - PageSpeed Insights analysis
+- `pagespeed_core_web_vitals` - Core Web Vitals (LCP, FID, CLS, FCP, TTI, TBT)
+
 ---
 
 ## 🚧 In Progress
@@ -58,15 +64,8 @@ _Nothing currently in progress_
 
 ## 🔮 Future Considerations
 
-### CI/CD
-- GitHub Actions for automated testing
-- Automated npm publishing on release
-- Semantic versioning automation
-
 ### Additional APIs
 - Google Analytics integration
-- PageSpeed Insights integration
-- Core Web Vitals data
 
 ### Developer Experience
 - Debug logging mode

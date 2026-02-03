@@ -233,6 +233,13 @@ src/
 |------|-------------|-----------|
 | `inspection_inspect` | Inspect URL index status | `siteUrl`, `inspectionUrl`, `languageCode?` |
 
+### PageSpeed Insights
+
+| Tool | Description | Arguments |
+|------|-------------|-----------|
+| `pagespeed_analyze` | PageSpeed Insights scores (performance, accessibility, SEO) | `url`, `strategy?` (mobile/desktop) |
+| `pagespeed_core_web_vitals` | Core Web Vitals for mobile & desktop (LCP, FID, CLS, etc.) | `url` |
+
 ---
 
 ## Resources
