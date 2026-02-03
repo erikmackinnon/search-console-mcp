@@ -27,6 +27,13 @@ This document outlines the planned features and improvements for this project.
 - Pagination support via `startRow` parameter
 - Comprehensive README with installation guides
 
+### v1.3.0 - More Prompts
+- `compare-performance` - Compare this week vs last week
+- `find-declining-pages` - Identify pages losing traffic
+- `keyword-opportunities` - Find low-CTR high-impression queries
+- `new-content-impact` - Analyze new content performance
+- `mobile-vs-desktop` - Compare device performance
+
 ---
 
 ## 🚧 In Progress
@@ -36,16 +43,6 @@ _Nothing currently in progress_
 ---
 
 ## 📋 Planned
-
-### v1.3.0 - More Prompts
-
-| Prompt | Description |
-|--------|-------------|
-| `compare-performance` | Compare this week vs last week |
-| `find-declining-pages` | Identify pages losing traffic |
-| `keyword-opportunities` | Find low-CTR high-impression queries |
-| `new-content-impact` | Analyze performance of recent content |
-| `mobile-vs-desktop` | Compare device performance |
 
 ### v1.4.0 - Additional Resources
 

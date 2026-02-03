@@ -370,6 +370,135 @@ server.prompt(
   })
 );
 
+server.prompt(
+  "compare-performance",
+  { siteUrl: z.string().describe("The URL of the site to analyze") },
+  ({ siteUrl }) => ({
+    messages: [{
+      role: "user",
+      content: {
+        type: "text",
+        text: `Compare the performance of ${siteUrl} for this week vs last week.
+
+Use the 'analytics_compare_periods' tool to compare the two periods:
+- Period 1 (this week): last 7 days ending 3 days ago (to account for data delay)
+- Period 2 (last week): the 7 days before that
+
+Analyze the changes in clicks, impressions, CTR, and position.
+Highlight any significant improvements or declines.
+If there are notable changes, use 'analytics_top_queries' to identify which queries are driving the change.`
+      }
+    }]
+  })
+);
+
+server.prompt(
+  "find-declining-pages",
+  { siteUrl: z.string().describe("The URL of the site to analyze") },
+  ({ siteUrl }) => ({
+    messages: [{
+      role: "user",
+      content: {
+        type: "text",
+        text: `Find pages on ${siteUrl} that are losing traffic.
+
+Steps:
+1. Use 'analytics_compare_periods' to compare this week vs last week overall
+2. Use 'analytics_query' with dimension 'page' to get page-level data for both periods
+3. Identify pages with significant click/impression drops
+
+For each declining page, provide:
+- The URL
+- Previous vs current performance
+- Possible reasons and recommendations`
+      }
+    }]
+  })
+);
+
+server.prompt(
+  "keyword-opportunities",
+  { siteUrl: z.string().describe("The URL of the site to analyze") },
+  ({ siteUrl }) => ({
+    messages: [{
+      role: "user",
+      content: {
+        type: "text",
+        text: `Find keyword opportunities for ${siteUrl}.
+
+Use 'analytics_top_queries' to get top queries, then analyze for:
+
+1. **Low CTR, High Impressions**: Queries where you rank but don't get clicks
+   - These need better titles/meta descriptions
+   - Look for CTR < 2% with impressions > 100
+
+2. **High Position (>10), Good Impressions**: Queries not on page 1
+   - These are close to ranking well
+   - Small optimization could move them up
+
+3. **New Ranking Queries**: Queries that appeared recently
+   - Opportunities to create more content
+
+Provide specific recommendations for the top 5 opportunities.`
+      }
+    }]
+  })
+);
+
+server.prompt(
+  "new-content-impact",
+  {
+    siteUrl: z.string().describe("The URL of the site"),
+    pageUrl: z.string().describe("The URL of the new content to analyze")
+  },
+  ({ siteUrl, pageUrl }) => ({
+    messages: [{
+      role: "user",
+      content: {
+        type: "text",
+        text: `Analyze the impact of new content at ${pageUrl} on site ${siteUrl}.
+
+1. Use 'inspection_inspect' to check if the page is indexed
+2. Use 'analytics_query' with a page filter for this URL to get its performance data
+3. Identify which queries are driving traffic to this page
+
+Provide:
+- Indexing status
+- Key metrics (clicks, impressions, CTR, position)
+- Top queries ranking for this page
+- Recommendations for improvement`
+      }
+    }]
+  })
+);
+
+server.prompt(
+  "mobile-vs-desktop",
+  { siteUrl: z.string().describe("The URL of the site to analyze") },
+  ({ siteUrl }) => ({
+    messages: [{
+      role: "user",
+      content: {
+        type: "text",
+        text: `Compare mobile vs desktop performance for ${siteUrl}.
+
+Use 'analytics_query' with dimension 'device' to get device-level metrics.
+
+Analyze:
+1. Click and impression distribution across devices
+2. CTR differences between mobile and desktop
+3. Position ranking differences
+
+If there's a significant gap (e.g., mobile CTR much lower), investigate:
+- Use 'inspection_inspect' on key pages to check mobile usability
+- Recommend specific improvements
+
+Provide a summary with actionable recommendations.`
+      }
+    }]
+  })
+);
+
 async function main() {
   const transport = new StdioServerTransport();
   await server.connect(transport);

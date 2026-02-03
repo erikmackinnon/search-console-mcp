@@ -251,9 +251,16 @@ AI agents can read these built-in documentation resources:
 
 ## Prompts
 
-| Prompt | Description |
-|--------|-------------|
-| `analyze-site-performance` | Analyze a site's performance for the last 28 days |
+Pre-configured analysis workflows for AI agents:
+
+| Prompt | Description | Arguments |
+|--------|-------------|-----------|
+| `analyze-site-performance` | Analyze site's 28-day performance | `siteUrl` |
+| `compare-performance` | Compare this week vs last week | `siteUrl` |
+| `find-declining-pages` | Find pages losing traffic | `siteUrl` |
+| `keyword-opportunities` | Find low-CTR high-impression queries | `siteUrl` |
+| `new-content-impact` | Analyze new content performance | `siteUrl`, `pageUrl` |
+| `mobile-vs-desktop` | Compare device performance | `siteUrl` |
 
 ---
 
