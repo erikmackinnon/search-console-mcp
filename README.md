@@ -240,6 +240,15 @@ src/
 | `pagespeed_analyze` | PageSpeed Insights scores (performance, accessibility, SEO) | `url`, `strategy?` (mobile/desktop) |
 | `pagespeed_core_web_vitals` | Core Web Vitals for mobile & desktop (LCP, FID, CLS, etc.) | `url` |
 
+### SEO Insights
+
+| Tool | Description | Arguments |
+|------|-------------|-----------|
+| `seo_recommendations` | Generate actionable SEO recommendations | `siteUrl`, `days?` |
+| `seo_low_hanging_fruit` | Find keywords at positions 5-20 with high impressions | `siteUrl`, `days?`, `minImpressions?`, `limit?` |
+| `seo_cannibalization` | Detect pages competing for the same keywords | `siteUrl`, `days?`, `minImpressions?`, `limit?` |
+| `seo_quick_wins` | Find pages close to page 1 (positions 11-20) | `siteUrl`, `days?`, `minImpressions?`, `limit?` |
+
 ---
 
 ## Resources
