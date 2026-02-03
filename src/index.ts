@@ -10,7 +10,7 @@ import * as pagespeed from "./tools/pagespeed.js";
 import { formatError } from "./errors.js";
 
 const server = new McpServer({
-  name: "google-search-console",
+  name: "search-console-mcp",
   version: "1.0.0",
 });
 

@@ -1,11 +1,11 @@
 {
-  "name": "google-search-console-mcp",
-  "version": "0.0.1",
+  "name": "search-console-mcp",
+  "version": "1.0.0",
   "description": "MCP server for Google Search Console API",
   "type": "module",
   "main": "dist/index.js",
   "bin": {
-    "google-search-console-mcp": "./dist/index.js"
+    "search-console-mcp": "./dist/index.js"
   },
   "files": [
     "dist",
@@ -19,6 +19,7 @@
   },
   "keywords": [
     "mcp",
+    "bing-search",
     "google-search-console",
     "seo"
   ],

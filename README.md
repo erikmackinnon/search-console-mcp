@@ -9,7 +9,7 @@ A Model Context Protocol (MCP) server that provides AI agents with access to Goo
 For users with an MCP-compatible client (like Claude Desktop):
 
 ```bash
-npx google-search-console-mcp
+npx search-console-mcp
 ```
 
 ---
@@ -46,14 +46,14 @@ npx google-search-console-mcp
 No installation needed. Configure your MCP client to run:
 
 ```bash
-npx google-search-console-mcp
+npx search-console-mcp
 ```
 
 ### Option 2: Global Install
 
 ```bash
-npm install -g google-search-console-mcp
-google-search-console-mcp
+npm install -g search-console-mcp
+search-console-mcp
 ```
 
 ### Option 3: Clone for Development
@@ -126,7 +126,7 @@ Add to your `claude_desktop_config.json`:
   "mcpServers": {
     "google-search-console": {
       "command": "npx",
-      "args": ["google-search-console-mcp"],
+      "args": ["search-console-mcp"],
       "env": {
         "GOOGLE_APPLICATION_CREDENTIALS": "/path/to/your/service-account-key.json"
       }
@@ -141,7 +141,7 @@ Add to your `claude_desktop_config.json`:
 {
   "name": "google-search-console",
   "command": "npx",
-  "args": ["google-search-console-mcp"],
+  "args": ["search-console-mcp"],
   "env": {
     "GOOGLE_APPLICATION_CREDENTIALS": "/path/to/your/service-account-key.json"
   }
