@@ -44,6 +44,12 @@ This document outlines the planned features and improvements for this project.
 - `pagespeed_analyze` - PageSpeed Insights analysis
 - `pagespeed_core_web_vitals` - Core Web Vitals (LCP, FID, CLS, FCP, TTI, TBT)
 
+### v1.8.0 - SEO Insights
+- `seo_recommendations` - Generate actionable SEO improvement suggestions
+- `seo_low_hanging_fruit` - Find high-impression keywords at positions 5-20
+- `seo_cannibalization` - Detect pages competing for the same keywords
+- `seo_quick_wins` - Find pages close to page 1 (positions 11-20)
+
 ---
 
 ## 🚧 In Progress

@@ -7,6 +7,7 @@ import * as sitemaps from "./tools/sitemaps.js";
 import * as analytics from "./tools/analytics.js";
 import * as inspection from "./tools/inspection.js";
 import * as pagespeed from "./tools/pagespeed.js";
+import * as seoInsights from "./tools/seo-insights.js";
 import { formatError } from "./errors.js";
 
 const server = new McpServer({
@@ -316,6 +317,89 @@ server.tool(
   async ({ url }) => {
     try {
       const result = await pagespeed.getCoreWebVitals(url);
+      return {
+        content: [{ type: "text", text: JSON.stringify(result, null, 2) }]
+      };
+    } catch (error) {
+      return formatError(error);
+    }
+  }
+);
+
+// SEO Insights Tools
+server.tool(
+  "seo_recommendations",
+  "Generate SEO recommendations based on site performance data",
+  {
+    siteUrl: z.string().describe("The site URL (e.g., https://example.com)"),
+    days: z.number().optional().describe("Number of days to analyze (default: 28)")
+  },
+  async ({ siteUrl, days }) => {
+    try {
+      const result = await seoInsights.generateRecommendations(siteUrl, { days });
+      return {
+        content: [{ type: "text", text: JSON.stringify(result, null, 2) }]
+      };
+    } catch (error) {
+      return formatError(error);
+    }
+  }
+);
+
+server.tool(
+  "seo_low_hanging_fruit",
+  "Find keywords with high impressions but low rankings (positions 5-20) that have potential for quick wins",
+  {
+    siteUrl: z.string().describe("The site URL"),
+    days: z.number().optional().describe("Number of days to analyze (default: 28)"),
+    minImpressions: z.number().optional().describe("Minimum impressions threshold (default: 100)"),
+    limit: z.number().optional().describe("Max results to return (default: 50)")
+  },
+  async ({ siteUrl, days, minImpressions, limit }) => {
+    try {
+      const result = await seoInsights.findLowHangingFruit(siteUrl, { days, minImpressions, limit });
+      return {
+        content: [{ type: "text", text: JSON.stringify(result, null, 2) }]
+      };
+    } catch (error) {
+      return formatError(error);
+    }
+  }
+);
+
+server.tool(
+  "seo_cannibalization",
+  "Detect keyword cannibalization - multiple pages competing for the same query",
+  {
+    siteUrl: z.string().describe("The site URL"),
+    days: z.number().optional().describe("Number of days to analyze (default: 28)"),
+    minImpressions: z.number().optional().describe("Minimum impressions threshold (default: 50)"),
+    limit: z.number().optional().describe("Max issues to return (default: 30)")
+  },
+  async ({ siteUrl, days, minImpressions, limit }) => {
+    try {
+      const result = await seoInsights.detectCannibalization(siteUrl, { days, minImpressions, limit });
+      return {
+        content: [{ type: "text", text: JSON.stringify(result, null, 2) }]
+      };
+    } catch (error) {
+      return formatError(error);
+    }
+  }
+);
+
+server.tool(
+  "seo_quick_wins",
+  "Find pages with queries ranking on page 2 (positions 11-20) that could be pushed to page 1",
+  {
+    siteUrl: z.string().describe("The site URL"),
+    days: z.number().optional().describe("Number of days to analyze (default: 28)"),
+    minImpressions: z.number().optional().describe("Minimum impressions threshold (default: 100)"),
+    limit: z.number().optional().describe("Max results to return (default: 20)")
+  },
+  async ({ siteUrl, days, minImpressions, limit }) => {
+    try {
+      const result = await seoInsights.findQuickWins(siteUrl, { days, minImpressions, limit });
       return {
         content: [{ type: "text", text: JSON.stringify(result, null, 2) }]
       };
