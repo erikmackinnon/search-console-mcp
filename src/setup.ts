@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-import { readFileSync, existsSync, writeFileSync } from 'fs';
-import { resolve, dirname } from 'path';
+import { readFileSync, existsSync } from 'fs';
+import { resolve } from 'path';
 import { createInterface } from 'readline';
 import { homedir } from 'os';
 
@@ -62,7 +62,6 @@ function validateKeyFile(path: string): ServiceAccountKey | null {
         const content = readFileSync(fullPath, 'utf-8');
         const key = JSON.parse(content) as ServiceAccountKey;
 
-        // Validate required fields
         const required = ['type', 'project_id', 'client_email', 'private_key'];
         const missing = required.filter(f => !(f in key));
 
@@ -85,21 +84,50 @@ function validateKeyFile(path: string): ServiceAccountKey | null {
 
 async function testConnection(keyPath: string): Promise<boolean> {
     try {
-        // Set the environment variable temporarily
         process.env.GOOGLE_APPLICATION_CREDENTIALS = resolve(keyPath.replace('~', homedir()));
-
-        // Try to authenticate
         const { google } = await import('googleapis');
         const auth = new google.auth.GoogleAuth({
             scopes: ['https://www.googleapis.com/auth/webmasters.readonly']
         });
-
         await auth.getClient();
         return true;
     } catch (error) {
         printError(`Authentication failed: ${(error as Error).message}`);
         return false;
     }
+}
+
+function showConfigSnippets(credentialsPath: string) {
+    console.log('\nAdd this to your MCP client configuration:\n');
+    console.log('For Claude Desktop (~/.config/claude/claude_desktop_config.json):');
+    console.log('─'.repeat(60));
+    console.log(JSON.stringify({
+        mcpServers: {
+            "search-console": {
+                command: "npx",
+                args: ["search-console-mcp"],
+                env: {
+                    GOOGLE_APPLICATION_CREDENTIALS: credentialsPath
+                }
+            }
+        }
+    }, null, 2));
+    console.log('─'.repeat(60));
+
+    console.log('\nFor VS Code Copilot (.vscode/mcp.json):');
+    console.log('─'.repeat(60));
+    console.log(JSON.stringify({
+        servers: {
+            "search-console": {
+                command: "npx",
+                args: ["search-console-mcp"],
+                env: {
+                    GOOGLE_APPLICATION_CREDENTIALS: credentialsPath
+                }
+            }
+        }
+    }, null, 2));
+    console.log('─'.repeat(60));
 }
 
 async function main() {
@@ -117,93 +145,74 @@ async function main() {
     console.log('  3. Click "Keys" > "Add Key" > "Create new key" > "JSON"');
     console.log('  4. Save the downloaded JSON file\n');
 
-    const keyPath = await ask('Enter the path to your JSON key file: ');
+    const keyPath = await ask('Enter the path to your JSON key file (or press Enter to see config examples): ');
 
-    if (!keyPath) {
-        printError('No path provided. Exiting.');
-        rl.close();
-        process.exit(1);
-    }
+    // Default values for when no path provided
+    let serviceAccountEmail = '<your-service-account>@<project>.iam.gserviceaccount.com';
+    let credentialsPath = '/path/to/your/service-account-key.json';
 
-    // Validate the key file
-    const key = validateKeyFile(keyPath);
-    if (!key) {
-        rl.close();
-        process.exit(1);
-    }
+    if (keyPath) {
+        // Validate the key file
+        const key = validateKeyFile(keyPath);
+        if (!key) {
+            rl.close();
+            process.exit(1);
+        }
 
-    printSuccess('JSON key file is valid!');
-    printInfo(`Project: ${key.project_id}`);
-    printInfo(`Service Account: ${key.client_email}`);
+        printSuccess('JSON key file is valid!');
+        printInfo(`Project: ${key.project_id}`);
+        printInfo(`Service Account: ${key.client_email}`);
+        serviceAccountEmail = key.client_email;
+        credentialsPath = resolve(keyPath.replace('~', homedir()));
 
-    // Step 2: Show service account email
-    printStep(2, 'Add service account to Google Search Console');
+        // Step 2: Show service account email
+        printStep(2, 'Add service account to Google Search Console');
 
-    console.log('You need to add this email as a user in Google Search Console:\n');
-    console.log(`  📧 ${key.client_email}\n`);
-    console.log('Steps:');
-    console.log('  1. Go to https://search.google.com/search-console');
-    console.log('  2. Select your property (or add one if needed)');
-    console.log('  3. Click "Settings" (gear icon) in the sidebar');
-    console.log('  4. Click "Users and permissions"');
-    console.log('  5. Click "Add user"');
-    console.log(`  6. Enter: ${key.client_email}`);
-    console.log('  7. Set permission to "Full" (or "Restricted" for read-only)');
-    console.log('  8. Click "Add"\n');
+        console.log('You need to add this email as a user in Google Search Console:\n');
+        console.log(`  📧 ${serviceAccountEmail}\n`);
+        console.log('Steps:');
+        console.log('  1. Go to https://search.google.com/search-console');
+        console.log('  2. Select your property (or add one if needed)');
+        console.log('  3. Click "Settings" (gear icon) in the sidebar');
+        console.log('  4. Click "Users and permissions"');
+        console.log('  5. Click "Add user"');
+        console.log(`  6. Enter: ${serviceAccountEmail}`);
+        console.log('  7. Set permission to "Full" (or "Restricted" for read-only)');
+        console.log('  8. Click "Add"\n');
 
-    await ask('Press Enter when you\'ve added the service account to Search Console...');
+        await ask('Press Enter when you\'ve added the service account to Search Console...');
 
-    // Step 3: Test connection
-    printStep(3, 'Test connection');
+        // Step 3: Test connection
+        printStep(3, 'Test connection');
 
-    console.log('Testing authentication with Google APIs...');
-    const connected = await testConnection(keyPath);
+        console.log('Testing authentication with Google APIs...');
+        const connected = await testConnection(keyPath);
 
-    if (connected) {
-        printSuccess('Authentication successful!');
+        if (connected) {
+            printSuccess('Authentication successful!');
+        } else {
+            printError('Authentication failed. Please check your credentials and try again.');
+            rl.close();
+            process.exit(1);
+        }
+
+        // Step 4: Show configuration
+        printStep(4, 'Configure your MCP client');
+        showConfigSnippets(credentialsPath);
+        console.log('\n🎉 Setup complete! You can now use Search Console MCP.\n');
+
     } else {
-        printError('Authentication failed. Please check your credentials and try again.');
-        rl.close();
-        process.exit(1);
+        // No path provided - just show config examples
+        printInfo('No credentials file provided. Showing example configuration...\n');
+
+        printStep(2, 'Add service account to Google Search Console');
+        console.log('After creating your service account, add this email to Search Console:');
+        console.log(`  📧 ${serviceAccountEmail}\n`);
+
+        printStep(3, 'Configure your MCP client');
+        showConfigSnippets(credentialsPath);
+        console.log('\n💡 Run this wizard again with your JSON file path for validation.\n');
     }
-
-    // Step 4: Show configuration
-    printStep(4, 'Configure your MCP client');
-
-    const fullPath = resolve(keyPath.replace('~', homedir()));
-
-    console.log('Add this to your MCP client configuration:\n');
-    console.log('For Claude Desktop (~/.config/claude/claude_desktop_config.json):');
-    console.log('─'.repeat(60));
-    console.log(JSON.stringify({
-        mcpServers: {
-            "search-console": {
-                command: "npx",
-                args: ["search-console-mcp"],
-                env: {
-                    GOOGLE_APPLICATION_CREDENTIALS: fullPath
-                }
-            }
-        }
-    }, null, 2));
-    console.log('─'.repeat(60));
-
-    console.log('\nFor VS Code Copilot (.vscode/mcp.json):');
-    console.log('─'.repeat(60));
-    console.log(JSON.stringify({
-        servers: {
-            "search-console": {
-                command: "npx",
-                args: ["search-console-mcp"],
-                env: {
-                    GOOGLE_APPLICATION_CREDENTIALS: fullPath
-                }
-            }
-        }
-    }, null, 2));
-    console.log('─'.repeat(60));
-
-    console.log('\n🎉 Setup complete! You can now use Search Console MCP.\n');
 
     rl.close();
 }
