@@ -5,7 +5,8 @@
   "type": "module",
   "main": "dist/index.js",
   "bin": {
-    "search-console-mcp": "./dist/index.js"
+    "search-console-mcp": "./dist/index.js",
+    "search-console-mcp-setup": "./dist/setup.js"
   },
   "files": [
     "dist",
