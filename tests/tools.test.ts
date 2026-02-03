@@ -6,39 +6,39 @@ import { queryAnalytics, getPerformanceSummary } from '../src/tools/analytics';
 import { inspectUrl } from '../src/tools/inspection';
 
 describe('Sites Tools', () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
-  it('should list sites', async () => {
-    mockSearchConsoleClient.sites.list.mockResolvedValue({
-      data: { siteEntry: [{ siteUrl: 'https://example.com' }] },
+    beforeEach(() => {
+        vi.clearAllMocks();
     });
-    const sites = await listSites();
-    expect(sites).toEqual([{ siteUrl: 'https://example.com' }]);
-    expect(mockSearchConsoleClient.sites.list).toHaveBeenCalled();
-  });
 
-  it('should add a site', async () => {
-    mockSearchConsoleClient.sites.add.mockResolvedValue({});
-    const result = await addSite('https://example.com');
-    expect(result).toContain('Successfully added site');
-    expect(mockSearchConsoleClient.sites.add).toHaveBeenCalledWith({ siteUrl: 'https://example.com' });
-  });
+    it('should list sites', async () => {
+        mockSearchConsoleClient.sites.list.mockResolvedValue({
+            data: { siteEntry: [{ siteUrl: 'https://example.com' }] },
+        });
+        const sites = await listSites();
+        expect(sites).toEqual([{ siteUrl: 'https://example.com' }]);
+        expect(mockSearchConsoleClient.sites.list).toHaveBeenCalled();
+    });
 
-  it('should delete a site', async () => {
-    mockSearchConsoleClient.sites.delete.mockResolvedValue({});
-    const result = await deleteSite('https://example.com');
-    expect(result).toContain('Successfully deleted site');
-    expect(mockSearchConsoleClient.sites.delete).toHaveBeenCalledWith({ siteUrl: 'https://example.com' });
-  });
+    it('should add a site', async () => {
+        mockSearchConsoleClient.sites.add.mockResolvedValue({});
+        const result = await addSite('https://example.com');
+        expect(result).toContain('Successfully added site');
+        expect(mockSearchConsoleClient.sites.add).toHaveBeenCalledWith({ siteUrl: 'https://example.com' });
+    });
 
-  it('should get a site', async () => {
-    mockSearchConsoleClient.sites.get.mockResolvedValue({ data: { siteUrl: 'https://example.com', permissionLevel: 'siteOwner' } });
-    const result = await getSite('https://example.com');
-    expect(result).toEqual({ siteUrl: 'https://example.com', permissionLevel: 'siteOwner' });
-    expect(mockSearchConsoleClient.sites.get).toHaveBeenCalledWith({ siteUrl: 'https://example.com' });
-  });
+    it('should delete a site', async () => {
+        mockSearchConsoleClient.sites.delete.mockResolvedValue({});
+        const result = await deleteSite('https://example.com');
+        expect(result).toContain('Successfully deleted site');
+        expect(mockSearchConsoleClient.sites.delete).toHaveBeenCalledWith({ siteUrl: 'https://example.com' });
+    });
+
+    it('should get a site', async () => {
+        mockSearchConsoleClient.sites.get.mockResolvedValue({ data: { siteUrl: 'https://example.com', permissionLevel: 'siteOwner' } });
+        const result = await getSite('https://example.com');
+        expect(result).toEqual({ siteUrl: 'https://example.com', permissionLevel: 'siteOwner' });
+        expect(mockSearchConsoleClient.sites.get).toHaveBeenCalledWith({ siteUrl: 'https://example.com' });
+    });
 });
 
 describe('Sitemaps Tools', () => {
@@ -101,7 +101,14 @@ describe('Analytics Tools', () => {
 
         const result = await getPerformanceSummary('https://example.com');
 
-        expect(result).toEqual({ clicks: 100, impressions: 1000, ctr: 0.1, position: 5 });
+        expect(result).toEqual({
+            clicks: 100,
+            impressions: 1000,
+            ctr: 0.1,
+            position: 5,
+            startDate: expect.any(String),
+            endDate: expect.any(String)
+        });
         expect(mockSearchConsoleClient.searchanalytics.query).toHaveBeenCalled();
     });
 });

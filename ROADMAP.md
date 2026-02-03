@@ -1,0 +1,90 @@
+# Google Search Console MCP Server - Roadmap
+
+This document outlines the planned features and improvements for this project.
+
+## ✅ Completed
+
+### v1.0.0 - Initial Release
+- Sites management (list, add, delete, get)
+- Sitemaps management (list, submit, delete, get)
+- Search Analytics queries with filtering
+- Performance summary with metrics
+- URL inspection
+- MCP resources and prompts
+- Error handling with user-friendly messages
+
+### v1.1.0 - Documentation Resources
+- Embedded documentation as MCP resources
+- Dimensions reference (`docs://dimensions`)
+- Filters reference (`docs://filters`)
+- Search types reference (`docs://search-types`)
+- Common patterns & recipes (`docs://patterns`)
+
+---
+
+## 🚧 In Progress
+
+_Nothing currently in progress_
+
+---
+
+## 📋 Planned
+
+### v1.2.0 - Enhanced Analytics Tools
+
+| Feature | Description | Priority |
+|---------|-------------|----------|
+| `analytics_compare_periods` | Compare metrics between two date ranges | High |
+| `analytics_top_queries` | Get top N queries with pre-configured options | High |
+| `analytics_top_pages` | Get top performing pages | High |
+| Pagination support | `startRow` parameter for large result sets | Medium |
+
+### v1.3.0 - More Prompts
+
+| Prompt | Description |
+|--------|-------------|
+| `compare-performance` | Compare this week vs last week |
+| `find-declining-pages` | Identify pages losing traffic |
+| `keyword-opportunities` | Find low-CTR high-impression queries |
+| `new-content-impact` | Analyze performance of recent content |
+| `mobile-vs-desktop` | Compare device performance |
+
+### v1.4.0 - Additional Resources
+
+| Resource | Description |
+|----------|-------------|
+| `sitemaps://list` | List all sitemaps as a resource |
+| `analytics://summary` | Current performance summary |
+
+### v2.0.0 - OAuth2 Support
+
+- Browser-based OAuth2 flow for personal accounts
+- Token refresh handling
+- Multi-account support
+
+---
+
+## 🔮 Future Considerations
+
+### CI/CD
+- GitHub Actions for automated testing
+- Automated npm publishing on release
+- Semantic versioning automation
+
+### Additional APIs
+- Google Analytics integration
+- PageSpeed Insights integration
+- Core Web Vitals data
+
+### Developer Experience
+- Debug logging mode
+- Request/response caching
+- Rate limit handling with retry
+
+---
+
+## Contributing
+
+See [CONTRIBUTING.md](./CONTRIBUTING.md) for how to contribute to this project.
+
+Ideas and feature requests are welcome! Please open an issue to discuss.

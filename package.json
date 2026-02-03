@@ -1,8 +1,17 @@
 {
   "name": "google-search-console-mcp",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "description": "MCP server for Google Search Console API",
+  "type": "module",
   "main": "dist/index.js",
+  "bin": {
+    "google-search-console-mcp": "./dist/index.js"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
     "build": "tsc",
     "test": "vitest run",
