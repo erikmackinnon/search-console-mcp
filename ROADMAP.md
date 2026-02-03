@@ -20,6 +20,13 @@ This document outlines the planned features and improvements for this project.
 - Search types reference (`docs://search-types`)
 - Common patterns & recipes (`docs://patterns`)
 
+### v1.2.0 - Enhanced Analytics Tools
+- `analytics_compare_periods` - Compare two date ranges
+- `analytics_top_queries` - Top queries by clicks/impressions
+- `analytics_top_pages` - Top pages by clicks/impressions
+- Pagination support via `startRow` parameter
+- Comprehensive README with installation guides
+
 ---
 
 ## 🚧 In Progress
@@ -29,15 +36,6 @@ _Nothing currently in progress_
 ---
 
 ## 📋 Planned
-
-### v1.2.0 - Enhanced Analytics Tools
-
-| Feature | Description | Priority |
-|---------|-------------|----------|
-| `analytics_compare_periods` | Compare metrics between two date ranges | High |
-| `analytics_top_queries` | Get top N queries with pre-configured options | High |
-| `analytics_top_pages` | Get top performing pages | High |
-| Pagination support | `startRow` parameter for large result sets | Medium |
 
 ### v1.3.0 - More Prompts
 

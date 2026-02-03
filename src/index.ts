@@ -155,7 +155,7 @@ server.tool(
 // Analytics Tools
 server.tool(
   "analytics_query",
-  "Query search analytics data",
+  "Query search analytics data with optional pagination",
   {
     siteUrl: z.string().describe("The URL of the site"),
     startDate: z.string().describe("Start date (YYYY-MM-DD)"),
@@ -163,6 +163,7 @@ server.tool(
     dimensions: z.array(z.string()).optional().describe("Dimensions to group by (date, query, page, country, device, searchAppearance)"),
     type: z.string().optional().describe("Search type (web, image, video, news, discover, googleNews)"),
     limit: z.number().optional().describe("Max number of rows (default: 1000, max: 25000)"),
+    startRow: z.number().optional().describe("Starting row for pagination (0-based)"),
     filters: z.array(z.object({
       dimension: z.string(),
       operator: z.string(),
@@ -191,6 +192,70 @@ server.tool(
   async ({ siteUrl, days }) => {
     try {
       const result = await analytics.getPerformanceSummary(siteUrl, days);
+      return {
+        content: [{ type: "text", text: JSON.stringify(result, null, 2) }]
+      };
+    } catch (error) {
+      return formatError(error);
+    }
+  }
+);
+
+server.tool(
+  "analytics_compare_periods",
+  "Compare performance metrics between two date periods. Useful for week-over-week or month-over-month analysis.",
+  {
+    siteUrl: z.string().describe("The URL of the site"),
+    period1Start: z.string().describe("Start date of first (current) period (YYYY-MM-DD)"),
+    period1End: z.string().describe("End date of first (current) period (YYYY-MM-DD)"),
+    period2Start: z.string().describe("Start date of second (comparison) period (YYYY-MM-DD)"),
+    period2End: z.string().describe("End date of second (comparison) period (YYYY-MM-DD)")
+  },
+  async ({ siteUrl, period1Start, period1End, period2Start, period2End }) => {
+    try {
+      const result = await analytics.comparePeriods(siteUrl, period1Start, period1End, period2Start, period2End);
+      return {
+        content: [{ type: "text", text: JSON.stringify(result, null, 2) }]
+      };
+    } catch (error) {
+      return formatError(error);
+    }
+  }
+);
+
+server.tool(
+  "analytics_top_queries",
+  "Get top search queries by clicks or impressions for the last N days.",
+  {
+    siteUrl: z.string().describe("The URL of the site"),
+    days: z.number().optional().describe("Number of days to look back (default: 28)"),
+    limit: z.number().optional().describe("Number of top queries to return (default: 10)"),
+    sortBy: z.enum(["clicks", "impressions"]).optional().describe("Sort by clicks or impressions (default: clicks)")
+  },
+  async ({ siteUrl, days, limit, sortBy }) => {
+    try {
+      const result = await analytics.getTopQueries(siteUrl, { days, limit, sortBy });
+      return {
+        content: [{ type: "text", text: JSON.stringify(result, null, 2) }]
+      };
+    } catch (error) {
+      return formatError(error);
+    }
+  }
+);
+
+server.tool(
+  "analytics_top_pages",
+  "Get top performing pages by clicks or impressions for the last N days.",
+  {
+    siteUrl: z.string().describe("The URL of the site"),
+    days: z.number().optional().describe("Number of days to look back (default: 28)"),
+    limit: z.number().optional().describe("Number of top pages to return (default: 10)"),
+    sortBy: z.enum(["clicks", "impressions"]).optional().describe("Sort by clicks or impressions (default: clicks)")
+  },
+  async ({ siteUrl, days, limit, sortBy }) => {
+    try {
+      const result = await analytics.getTopPages(siteUrl, { days, limit, sortBy });
       return {
         content: [{ type: "text", text: JSON.stringify(result, null, 2) }]
       };
