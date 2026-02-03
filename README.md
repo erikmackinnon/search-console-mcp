@@ -237,11 +237,13 @@ src/
 
 ## Resources
 
-AI agents can read these built-in documentation resources:
+AI agents can read these built-in documentation and data resources:
 
 | URI | Description |
 |-----|-------------|
 | `sites://list` | List of all sites (JSON) |
+| `sitemaps://list/{siteUrl}` | Sitemaps for a specific site (JSON) |
+| `analytics://summary/{siteUrl}` | Performance summary for a site (JSON) |
 | `docs://dimensions` | Available dimensions reference |
 | `docs://filters` | Filter operators and examples |
 | `docs://search-types` | Search types (web, image, video, etc.) |

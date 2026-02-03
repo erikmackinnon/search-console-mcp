@@ -34,6 +34,10 @@ This document outlines the planned features and improvements for this project.
 - `new-content-impact` - Analyze new content performance
 - `mobile-vs-desktop` - Compare device performance
 
+### v1.4.0 - Additional Resources
+- `sitemaps://list/{siteUrl}` - List sitemaps for a site
+- `analytics://summary/{siteUrl}` - Performance summary for a site
+
 ---
 
 ## 🚧 In Progress
@@ -43,13 +47,6 @@ _Nothing currently in progress_
 ---
 
 ## 📋 Planned
-
-### v1.4.0 - Additional Resources
-
-| Resource | Description |
-|----------|-------------|
-| `sitemaps://list` | List all sitemaps as a resource |
-| `analytics://summary` | Current performance summary |
 
 ### v2.0.0 - OAuth2 Support
 

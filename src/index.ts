@@ -302,6 +302,38 @@ server.resource(
   }
 );
 
+server.resource(
+  "sitemaps",
+  "sitemaps://list/{siteUrl}",
+  async (uri) => {
+    const siteUrl = decodeURIComponent(uri.pathname.replace('/list/', ''));
+    const result = await sitemaps.listSitemaps(siteUrl);
+    return {
+      contents: [{
+        uri: uri.href,
+        text: JSON.stringify(result, null, 2),
+        mimeType: "application/json"
+      }]
+    };
+  }
+);
+
+server.resource(
+  "analytics-summary",
+  "analytics://summary/{siteUrl}",
+  async (uri) => {
+    const siteUrl = decodeURIComponent(uri.pathname.replace('/summary/', ''));
+    const result = await analytics.getPerformanceSummary(siteUrl);
+    return {
+      contents: [{
+        uri: uri.href,
+        text: JSON.stringify(result, null, 2),
+        mimeType: "application/json"
+      }]
+    };
+  }
+);
+
 // Documentation Resources
 import { dimensionsDocs, filtersDocs, searchTypesDocs, patternsDocs } from "./docs/index.js";
 
