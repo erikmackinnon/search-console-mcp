@@ -50,6 +50,9 @@ This document outlines the planned features and improvements for this project.
 - `seo_cannibalization` - Detect pages competing for the same keywords
 - `seo_quick_wins` - Find pages close to page 1 (positions 11-20)
 
+### v1.9.0 - Schema Validator
+- `schema_validate` - Validate structured data (JSON-LD)
+
 ---
 
 ## 🚧 In Progress
@@ -105,7 +108,6 @@ _Nothing currently in progress_
 |-----|----------|
 | Google Analytics 4 | Session/user data, conversion tracking |
 | Bing Webmaster Tools | Microsoft search performance |
-| Schema.org Validator | Validate structured data |
 | Screaming Frog API | Technical SEO audits |
 
 ### Monitoring & Alerts
