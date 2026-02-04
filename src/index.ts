@@ -8,6 +8,7 @@ import * as analytics from "./tools/analytics.js";
 import * as inspection from "./tools/inspection.js";
 import * as pagespeed from "./tools/pagespeed.js";
 import * as seoInsights from "./tools/seo-insights.js";
+import * as schemaValidator from "./tools/schema-validator.js";
 import { formatError } from "./errors.js";
 
 const server = new McpServer({
@@ -400,6 +401,26 @@ server.tool(
   async ({ siteUrl, days, minImpressions, limit }) => {
     try {
       const result = await seoInsights.findQuickWins(siteUrl, { days, minImpressions, limit });
+      return {
+        content: [{ type: "text", text: JSON.stringify(result, null, 2) }]
+      };
+    } catch (error) {
+      return formatError(error);
+    }
+  }
+);
+
+// Schema Validator Tools
+server.tool(
+  "schema_validate",
+  "Validate Schema.org structured data (JSON-LD) from a URL, HTML snippet, or JSON object.",
+  {
+    type: z.enum(["url", "html", "json"]).describe("The type of input provided"),
+    data: z.string().describe("The URL, HTML content, or JSON string to validate")
+  },
+  async ({ type, data }) => {
+    try {
+      const result = await schemaValidator.validateSchema(data, type as 'url' | 'html' | 'json');
       return {
         content: [{ type: "text", text: JSON.stringify(result, null, 2) }]
       };

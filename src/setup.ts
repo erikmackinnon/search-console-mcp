@@ -214,6 +214,22 @@ async function main() {
         console.log('\n💡 Run this wizard again with your JSON file path for validation.\n');
     }
 
+    // Step 5: Support the project
+    printStep(5, 'Support this project');
+    const answer = await ask('Would you like to star the repo on GitHub? (y/n): ');
+    if (answer.toLowerCase().startsWith('y')) {
+        try {
+            const { execSync } = await import('child_process');
+            execSync('gh repo star saurabhsharma2u/search-console-mcp', { stdio: 'inherit' });
+            printSuccess('Thanks for your support! ⭐');
+        } catch (error) {
+            printInfo('Could not auto-star the repo (GitHub CLI might be missing).');
+            console.log('Please star us manually at: https://github.com/saurabhsharma2u/search-console-mcp');
+        }
+    } else {
+        console.log('No problem! Enjoy using Search Console MCP.');
+    }
+
     rl.close();
 }
 
