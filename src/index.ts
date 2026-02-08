@@ -8,6 +8,7 @@ import * as analytics from "./tools/analytics.js";
 import * as inspection from "./tools/inspection.js";
 import * as pagespeed from "./tools/pagespeed.js";
 import * as seoInsights from "./tools/seo-insights.js";
+import * as seoPrimitives from "./tools/seo-primitives.js";
 import * as schemaValidator from "./tools/schema-validator.js";
 import { formatError } from "./errors.js";
 
@@ -164,8 +165,10 @@ server.tool(
     startDate: z.string().describe("Start date (YYYY-MM-DD)"),
     endDate: z.string().describe("End date (YYYY-MM-DD)"),
     dimensions: z.array(z.string()).optional().describe("Dimensions to group by (date, query, page, country, device, searchAppearance)"),
-    type: z.string().optional().describe("Search type (web, image, video, news, discover, googleNews)"),
-    limit: z.number().optional().describe("Max number of rows (default: 1000, max: 25000)"),
+    type: z.enum(["web", "image", "video", "news", "discover", "googleNews"]).optional().describe("Search type (default: web)"),
+    aggregationType: z.enum(["auto", "byProperty", "byPage"]).optional().describe("How to aggregate data (default: auto)"),
+    dataState: z.enum(["final", "all"]).optional().describe("Include fresh data? 'all' includes fresh (preliminary) data (default: final)"),
+    limit: z.number().optional().describe("Max rows to return (default: 1000)"),
     startRow: z.number().optional().describe("Starting row for pagination (0-based)"),
     filters: z.array(z.object({
       dimension: z.string(),
@@ -475,6 +478,87 @@ server.tool(
 );
 
 server.tool(
+  "seo_low_ctr_opportunities",
+  "Find queries ranking in positions 1-10 with low CTR (< 60% of benchmark). Great for title tag optimization.",
+  {
+    siteUrl: z.string().describe("The site URL"),
+    days: z.number().optional().describe("Number of days to analyze (default: 28)"),
+    minImpressions: z.number().optional().describe("Minimum impressions threshold (default: 500)"),
+    limit: z.number().optional().describe("Max results to return (default: 50)")
+  },
+  async ({ siteUrl, days, minImpressions, limit }) => {
+    try {
+      const result = await seoInsights.findLowCTROpportunities(siteUrl, { days, minImpressions, limit });
+      return {
+        content: [{ type: "text", text: JSON.stringify(result, null, 2) }]
+      };
+    } catch (error) {
+      return formatError(error);
+    }
+  }
+);
+
+server.tool(
+  "seo_striking_distance",
+  "Find keywords ranking in positions 8-15. These are high-priority targets to push to Page 1.",
+  {
+    siteUrl: z.string().describe("The site URL"),
+    days: z.number().optional().describe("Number of days to analyze (default: 28)"),
+    limit: z.number().optional().describe("Max results to return (default: 50)")
+  },
+  async ({ siteUrl, days, limit }) => {
+    try {
+      const result = await seoInsights.findStrikingDistance(siteUrl, { days, limit });
+      return {
+        content: [{ type: "text", text: JSON.stringify(result, null, 2) }]
+      };
+    } catch (error) {
+      return formatError(error);
+    }
+  }
+);
+
+server.tool(
+  "seo_lost_queries",
+  "Identify queries that lost all traffic (or dropped >80%) compared to the previous period.",
+  {
+    siteUrl: z.string().describe("The site URL"),
+    days: z.number().optional().describe("Number of days to compare (default: 28)"),
+    limit: z.number().optional().describe("Max results to return (default: 50)")
+  },
+  async ({ siteUrl, days, limit }) => {
+    try {
+      const result = await seoInsights.findLostQueries(siteUrl, { days, limit });
+      return {
+        content: [{ type: "text", text: JSON.stringify(result, null, 2) }]
+      };
+    } catch (error) {
+      return formatError(error);
+    }
+  }
+);
+
+server.tool(
+  "seo_brand_vs_nonbrand",
+  "Analyze performance split between Brand and Non-Brand queries using a regex.",
+  {
+    siteUrl: z.string().describe("The site URL"),
+    brandRegex: z.string().describe("Regex to match brand keywords (e.g. 'acme|acme corp')"),
+    days: z.number().optional().describe("Number of days to analyze (default: 28)")
+  },
+  async ({ siteUrl, brandRegex, days }) => {
+    try {
+      const result = await seoInsights.analyzeBrandVsNonBrand(siteUrl, brandRegex, { days });
+      return {
+        content: [{ type: "text", text: JSON.stringify(result, null, 2) }]
+      };
+    } catch (error) {
+      return formatError(error);
+    }
+  }
+);
+
+server.tool(
   "seo_quick_wins",
   "Find pages with queries ranking on page 2 (positions 11-20) that could be pushed to page 1",
   {
@@ -492,6 +576,68 @@ server.tool(
     } catch (error) {
       return formatError(error);
     }
+  }
+);
+
+
+// SEO Primitives (Atoms)
+server.tool(
+  "seo_primitive_ranking_bucket",
+  "primitive: Get the ranking bucket for a specific position (e.g. Top 3, Page 1).",
+  { position: z.number().describe("The ranking position") },
+  async ({ position }) => {
+    return {
+      content: [{ type: "text", text: JSON.stringify(seoPrimitives.getRankingBucket(position), null, 2) }]
+    };
+  }
+);
+
+server.tool(
+  "seo_primitive_traffic_delta",
+  "primitive: Calculate the delta between two traffic metrics (absolute and percentage).",
+  {
+    current: z.number().describe("Current value"),
+    previous: z.number().describe("Previous value")
+  },
+  async ({ current, previous }) => {
+    return {
+      content: [{ type: "text", text: JSON.stringify(seoPrimitives.calculateTrafficDelta(current, previous), null, 2) }]
+    };
+  }
+);
+
+server.tool(
+  "seo_primitive_is_brand",
+  "primitive: Check if a query is a brand query based on a regex pattern.",
+  {
+    query: z.string().describe("The search query"),
+    brandRegex: z.string().describe("Regex pattern to identify brand terms")
+  },
+  async ({ query, brandRegex }) => {
+    return {
+      content: [{ type: "text", text: JSON.stringify(seoPrimitives.isBrandQuery(query, brandRegex), null, 2) }]
+    };
+  }
+);
+
+server.tool(
+  "seo_primitive_is_cannibalized",
+  "primitive: Check if two pages are competing for the same query based on their metrics.",
+  {
+    query: z.string().describe("The search query"),
+    pageA_position: z.number(),
+    pageA_impressions: z.number(),
+    pageA_clicks: z.number(),
+    pageB_position: z.number(),
+    pageB_impressions: z.number(),
+    pageB_clicks: z.number()
+  },
+  async ({ query, pageA_position, pageA_impressions, pageA_clicks, pageB_position, pageB_impressions, pageB_clicks }) => {
+    const pageA = { position: pageA_position, impressions: pageA_impressions, clicks: pageA_clicks };
+    const pageB = { position: pageB_position, impressions: pageB_impressions, clicks: pageB_clicks };
+    return {
+      content: [{ type: "text", text: JSON.stringify(seoPrimitives.isCannibalized(query, pageA, pageB), null, 2) }]
+    };
   }
 );
 

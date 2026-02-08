@@ -27,6 +27,9 @@ export interface LowHangingFruit {
 /**
  * Cannibalization: Multiple pages competing for the same query
  */
+/**
+ * Enhaced Cannibalization Issue
+ */
 export interface CannibalizationIssue {
     query: string;
     pages: Array<{
@@ -34,9 +37,11 @@ export interface CannibalizationIssue {
         clicks: number;
         impressions: number;
         position: number;
+        ctr: number;
     }>;
     totalClicks: number;
     totalImpressions: number;
+    clickShareConflict: number; // 0 to 1 score of how split the traffic is
 }
 
 /**
@@ -44,13 +49,61 @@ export interface CannibalizationIssue {
  */
 export interface QuickWin {
     page: string;
-    queries: Array<{
-        query: string;
-        position: number;
-        impressions: number;
-    }>;
-    avgPosition: number;
-    totalImpressions: number;
+    query: string;
+    position: number;
+    impressions: number;
+    potentialClicks: number;
+}
+
+/**
+ * Low CTR Opportunity: High ranking, high impressions, low CTR
+ */
+export interface LowCTROpportunity {
+    query: string;
+    page: string;
+    position: number;
+    impressions: number;
+    clicks: number;
+    ctr: number;
+    benchmarkCtr: number; // Expected CTR for this position
+}
+
+/**
+ * Striking Distance: Keywords ranking 8-15
+ */
+export interface StrikingDistanceQuery {
+    query: string;
+    page: string;
+    position: number;
+    impressions: number;
+    clicks: number;
+}
+
+/**
+ * Lost Query: Lost all traffic compared to previous period
+ */
+export interface LostQuery {
+    query: string;
+    page: string;
+    previousClicks: number;
+    previousImpressions: number;
+    previousPosition: number;
+    currentClicks: number;
+    currentImpressions: number;
+    currentPosition: number;
+    lostClicks: number;
+}
+
+/**
+ * Brand vs Non-Brand Analysis
+ */
+export interface BrandVsNonBrandMetrics {
+    segment: 'Brand' | 'Non-Brand';
+    clicks: number;
+    impressions: number;
+    ctr: number;
+    position: number;
+    queryCount: number;
 }
 
 /**
@@ -109,6 +162,7 @@ export async function findLowHangingFruit(
 
 /**
  * Detect keyword cannibalization: multiple pages ranking for the same query
+ * Enhanced to find true conflicts where traffic is split.
  */
 export async function detectCannibalization(
     siteUrl: string,
@@ -126,7 +180,12 @@ export async function detectCannibalization(
         startDate: startDate.toISOString().split('T')[0],
         endDate: endDate.toISOString().split('T')[0],
         dimensions: ['query', 'page'],
-        limit: 10000
+        limit: 10000,
+        filters: [{
+            dimension: 'position',
+            operator: 'smallerThan',
+            expression: '20' // Only care about cannibalization on first 2 pages
+        }]
     });
 
     // Group by query
@@ -135,6 +194,7 @@ export async function detectCannibalization(
         clicks: number;
         impressions: number;
         position: number;
+        ctr: number;
     }>>();
 
     for (const row of rows) {
@@ -152,7 +212,8 @@ export async function detectCannibalization(
             page,
             clicks: row.clicks ?? 0,
             impressions,
-            position: row.position ?? 0
+            position: row.position ?? 0,
+            ctr: row.ctr ?? 0
         });
     }
 
@@ -161,22 +222,252 @@ export async function detectCannibalization(
 
     for (const [query, pages] of queryMap) {
         if (pages.length >= 2) {
-            // Sort by position (best first)
-            pages.sort((a, b) => a.position - b.position);
+            // Sort by clicks (highest first)
+            pages.sort((a, b) => b.clicks - a.clicks);
 
-            cannibalization.push({
-                query,
-                pages,
-                totalClicks: pages.reduce((sum, p) => sum + p.clicks, 0),
-                totalImpressions: pages.reduce((sum, p) => sum + p.impressions, 0)
+            const totalClicks = pages.reduce((sum, p) => sum + p.clicks, 0);
+
+            // Calculate conflict score (0 = one page dominates, 1 = perfectly even split)
+            // Simplified Herfindahl-Hirschman Index approach
+            const shares = pages.map(p => totalClicks > 0 ? p.clicks / totalClicks : 0);
+            const hhi = shares.reduce((sum, s) => sum + s * s, 0);
+            const conflictScore = 1 - hhi;
+
+            // Only report if there is actual conflict (not just 1 click vs 1000)
+            if (conflictScore > 0.1 || pages[1].impressions > (pages[0].impressions * 0.2)) {
+                cannibalization.push({
+                    query,
+                    pages,
+                    totalClicks,
+                    totalImpressions: pages.reduce((sum, p) => sum + p.impressions, 0),
+                    clickShareConflict: parseFloat(conflictScore.toFixed(2))
+                });
+            }
+        }
+    }
+
+    // Sort by conflict severity (impact)
+    return cannibalization
+        .sort((a, b) => (b.totalClicks * b.clickShareConflict) - (a.totalClicks * a.clickShareConflict))
+        .slice(0, limit);
+}
+
+/**
+ * Find high impression, low CTR opportunities
+ * "Why am I ranking well but not getting clicks?"
+ */
+export async function findLowCTROpportunities(
+    siteUrl: string,
+    options: { days?: number; minImpressions?: number; limit?: number } = {}
+): Promise<LowCTROpportunity[]> {
+    const { days = 28, minImpressions = 500, limit = 50 } = options;
+
+    const endDate = new Date();
+    endDate.setDate(endDate.getDate() - 3);
+    const startDate = new Date(endDate);
+    startDate.setDate(startDate.getDate() - days);
+
+    const rows = await queryAnalytics({
+        siteUrl,
+        startDate: startDate.toISOString().split('T')[0],
+        endDate: endDate.toISOString().split('T')[0],
+        dimensions: ['query', 'page'],
+        limit: 5000
+    });
+
+    // Approximate benchmarks for CTR by position (Web)
+    const benchmarks: Record<number, number> = {
+        1: 0.30, 2: 0.15, 3: 0.10, 4: 0.06, 5: 0.04,
+        6: 0.03, 7: 0.02, 8: 0.015, 9: 0.01, 10: 0.01
+    };
+
+    return rows
+        .filter(r => (r.impressions ?? 0) > minImpressions && (r.position ?? 100) <= 10)
+        .map(r => {
+            const pos = Math.round(r.position ?? 10);
+            const benchmark = benchmarks[pos] || 0.01;
+            const actualCtr = r.ctr ?? 0;
+
+            return {
+                query: r.keys?.[0] ?? '',
+                page: r.keys?.[1] ?? '',
+                position: r.position ?? 0,
+                impressions: r.impressions ?? 0,
+                clicks: r.clicks ?? 0,
+                ctr: actualCtr,
+                benchmarkCtr: benchmark
+            };
+        })
+        .filter(item => item.ctr < (item.benchmarkCtr * 0.6)) // Only return if < 60% of benchmark
+        .sort((a, b) => b.impressions - a.impressions)
+        .slice(0, limit);
+}
+
+/**
+ * Find "Striking Distance" keywords (Ranking 8-15)
+ * These are easiest to push to Page 1 / Top 5.
+ */
+export async function findStrikingDistance(
+    siteUrl: string,
+    options: { days?: number; limit?: number } = {}
+): Promise<StrikingDistanceQuery[]> {
+    const { days = 28, limit = 50 } = options;
+
+    const endDate = new Date();
+    endDate.setDate(endDate.getDate() - 3);
+    const startDate = new Date(endDate);
+    startDate.setDate(startDate.getDate() - days);
+
+    const rows = await queryAnalytics({
+        siteUrl,
+        startDate: startDate.toISOString().split('T')[0],
+        endDate: endDate.toISOString().split('T')[0],
+        dimensions: ['query', 'page'],
+        limit: 5000
+    });
+
+    return rows
+        .filter(r => {
+            const pos = r.position ?? 0;
+            return pos >= 8 && pos <= 15;
+        })
+        .map(r => ({
+            query: r.keys?.[0] ?? '',
+            page: r.keys?.[1] ?? '',
+            position: r.position ?? 0,
+            impressions: r.impressions ?? 0,
+            clicks: r.clicks ?? 0
+        }))
+        .sort((a, b) => b.impressions - a.impressions)
+        .slice(0, limit);
+}
+
+/**
+ * Find Lost Queries
+ * Queries that had traffic in previous period but zero traffic now.
+ */
+export async function findLostQueries(
+    siteUrl: string,
+    options: { days?: number; limit?: number } = {}
+): Promise<LostQuery[]> {
+    const { days = 28, limit = 50 } = options;
+
+    // Calculate two periods
+    const endDate = new Date();
+    endDate.setDate(endDate.getDate() - 3);
+    const midDate = new Date(endDate);
+    midDate.setDate(midDate.getDate() - days);
+    const startDate = new Date(midDate);
+    startDate.setDate(startDate.getDate() - days);
+
+    const [current, previous] = await Promise.all([
+        queryAnalytics({
+            siteUrl,
+            startDate: midDate.toISOString().split('T')[0],
+            endDate: endDate.toISOString().split('T')[0],
+            dimensions: ['query', 'page'],
+            limit: 5000
+        }),
+        queryAnalytics({
+            siteUrl,
+            startDate: startDate.toISOString().split('T')[0],
+            endDate: midDate.toISOString().split('T')[0],
+            dimensions: ['query', 'page'],
+            limit: 5000
+        })
+    ]);
+
+    // Map current period for quick lookup
+    const currentMap = new Set(current.map(r => `${r.keys?.[0]}|${r.keys?.[1]}`));
+
+    // Find queries present in previous but NOT in current (or very low traffic)
+    // Actually "lost" means clicks went to near zero
+    const currentClicksMap = new Map(current.map(r => [`${r.keys?.[0]}|${r.keys?.[1]}`, r.clicks ?? 0]));
+
+    const lostQueries: LostQuery[] = [];
+
+    for (const prev of previous) {
+        const key = `${prev.keys?.[0]}|${prev.keys?.[1]}`;
+        const prevClicks = prev.clicks ?? 0;
+
+        if (prevClicks < 5) continue; // Ignore low volume noise
+
+        const currClicks = currentClicksMap.get(key) ?? 0;
+
+        // Definition of lost: >80% drop or zero
+        if (currClicks === 0 || (currClicks / prevClicks) < 0.2) {
+            lostQueries.push({
+                query: prev.keys?.[0] ?? '',
+                page: prev.keys?.[1] ?? '',
+                previousClicks: prevClicks,
+                previousImpressions: prev.impressions ?? 0,
+                previousPosition: prev.position ?? 0,
+                currentClicks: currClicks,
+                currentImpressions: 0, // We don't have this easily if it's missing from current, assume 0 or low
+                currentPosition: 0,
+                lostClicks: prevClicks - currClicks
             });
         }
     }
 
-    // Sort by total impressions (highest impact first)
-    return cannibalization
-        .sort((a, b) => b.totalImpressions - a.totalImpressions)
+    return lostQueries
+        .sort((a, b) => b.lostClicks - a.lostClicks)
         .slice(0, limit);
+}
+
+/**
+ * Brand vs Non-Brand Analysis
+ * Segments performance by regex match.
+ */
+export async function analyzeBrandVsNonBrand(
+    siteUrl: string,
+    brandRegexString: string,
+    options: { days?: number } = {}
+): Promise<BrandVsNonBrandMetrics[]> {
+    const { days = 28 } = options;
+
+    const endDate = new Date();
+    endDate.setDate(endDate.getDate() - 3);
+    const startDate = new Date(endDate);
+    startDate.setDate(startDate.getDate() - days);
+
+    const rows = await queryAnalytics({
+        siteUrl,
+        startDate: startDate.toISOString().split('T')[0],
+        endDate: endDate.toISOString().split('T')[0],
+        dimensions: ['query'],
+        limit: 10000
+    });
+
+    const brandRegex = new RegExp(brandRegexString, 'i');
+
+    const brandStats = { clicks: 0, impressions: 0, ctr: 0, position: 0, queryCount: 0, weightedPos: 0 };
+    const nonBrandStats = { clicks: 0, impressions: 0, ctr: 0, position: 0, queryCount: 0, weightedPos: 0 };
+
+    for (const row of rows) {
+        const query = row.keys?.[0] ?? '';
+        const isBrand = brandRegex.test(query);
+        const stats = isBrand ? brandStats : nonBrandStats;
+
+        stats.clicks += row.clicks ?? 0;
+        stats.impressions += row.impressions ?? 0;
+        stats.weightedPos += (row.position ?? 0) * (row.impressions ?? 0);
+        stats.queryCount++;
+    }
+
+    const calc = (stats: typeof brandStats, segment: 'Brand' | 'Non-Brand'): BrandVsNonBrandMetrics => ({
+        segment,
+        clicks: stats.clicks,
+        impressions: stats.impressions,
+        ctr: stats.impressions > 0 ? (stats.clicks / stats.impressions) : 0,
+        position: stats.impressions > 0 ? (stats.weightedPos / stats.impressions) : 0,
+        queryCount: stats.queryCount
+    });
+
+    return [
+        calc(brandStats, 'Brand'),
+        calc(nonBrandStats, 'Non-Brand')
+    ];
 }
 
 /**
@@ -201,49 +492,28 @@ export async function findQuickWins(
         limit: 10000
     });
 
-    // Group by page, filter for positions 11-20
-    const pageMap = new Map<string, Array<{
-        query: string;
-        position: number;
-        impressions: number;
-    }>>();
+    // Simplified logic: Just find page+query pairs in positions 11-20
+    const quickWins: QuickWin[] = rows
+        .map(r => {
+            const impressions = r.impressions ?? 0;
+            const clicks = r.clicks ?? 0;
 
-    for (const row of rows) {
-        const page = row.keys?.[0] ?? '';
-        const query = row.keys?.[1] ?? '';
-        const position = row.position ?? 0;
-        const impressions = row.impressions ?? 0;
+            // Estimate potential clicks if moved to top 3 (conservative 15% CTR)
+            const potentialClicks = Math.round(impressions * 0.15) - clicks;
 
-        // Only include queries on page 2 (positions 11-20)
-        if (position < 11 || position > 20 || impressions < minImpressions) continue;
-
-        if (!pageMap.has(page)) {
-            pageMap.set(page, []);
-        }
-
-        pageMap.get(page)!.push({ query, position, impressions });
-    }
-
-    // Build quick wins list
-    const quickWins: QuickWin[] = [];
-
-    for (const [page, queries] of pageMap) {
-        if (queries.length === 0) continue;
-
-        const avgPosition = queries.reduce((sum, q) => sum + q.position, 0) / queries.length;
-        const totalImpressions = queries.reduce((sum, q) => sum + q.impressions, 0);
-
-        quickWins.push({
-            page,
-            queries: queries.sort((a, b) => b.impressions - a.impressions).slice(0, 5),
-            avgPosition,
-            totalImpressions
-        });
-    }
-
-    return quickWins
-        .sort((a, b) => b.totalImpressions - a.totalImpressions)
+            return {
+                page: r.keys?.[0] ?? '',
+                query: r.keys?.[1] ?? '',
+                position: r.position ?? 0,
+                impressions,
+                potentialClicks: Math.max(0, potentialClicks)
+            };
+        })
+        .filter(q => q.position >= 11 && q.position <= 20 && q.impressions >= minImpressions)
+        .sort((a, b) => b.potentialClicks - a.potentialClicks)
         .slice(0, limit);
+
+    return quickWins;
 }
 
 /**
@@ -295,7 +565,7 @@ export async function generateRecommendations(
             title: `${quickWins.length} pages close to page 1`,
             description: `These pages have queries ranking on page 2 (positions 11-20). Small improvements could push them to page 1.`,
             priority: 'high',
-            data: { pages: quickWins.slice(0, 3).map(q => q.page) }
+            data: { pages: Array.from(new Set(quickWins.slice(0, 5).map(q => q.page))) }
         });
     }
 

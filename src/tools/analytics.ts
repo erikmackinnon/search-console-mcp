@@ -12,6 +12,8 @@ export interface AnalyticsOptions {
     operator: string;
     expression: string;
   }>;
+  aggregationType?: 'auto' | 'byProperty' | 'byPage';
+  dataState?: 'final' | 'all';
   limit?: number;
   startRow?: number;
 }
@@ -62,6 +64,9 @@ export async function queryAnalytics(options: AnalyticsOptions): Promise<searchc
     endDate: options.endDate,
     dimensions: options.dimensions || [],
     type: options.type || 'web',
+    aggregationType: options.aggregationType || 'auto',
+    dataState: options.dataState || 'final',
+
     rowLimit: Math.min(options.limit || 1000, 25000),
   };
 
