@@ -74,20 +74,24 @@ Copy and paste these into your MCP client (Claude Desktop, etc.) to get immediat
 
 ## Quick Start
 
-### Prerequisites
-1.  **Node.js 18+** installed.
-2.  A **Google Cloud Service Account** key (JSON file) with access to your Search Console property.
-
-### Installation
-
-**Option 1: Use with npx (Recommended)**
-Identify the path to your service account key and the site URL you want to manage.
+### 1. Run the Setup Wizard
+First, use the interactive wizard to validate your credentials and get your configuration:
 
 ```bash
-npx search-console-mcp
+npx search-console-mcp-setup
 ```
 
-**Option 2: Claude Desktop Configuration**
+The wizard will guide you through:
+- Creating a Google Service Account.
+- Adding the account to Search Console.
+- Validating your JSON key file.
+- Generating the configuration for your MCP client.
+
+### 2. Connect to an MCP Client
+
+**Note:** The server uses `stdio` to communicate. Do not run `npx search-console-mcp` directly in your terminal; it is meant to be run by an MCP client like Claude Desktop or Cursor.
+
+#### Claude Desktop Configuration
 Add this to your `claude_desktop_config.json`:
 
 ```json
