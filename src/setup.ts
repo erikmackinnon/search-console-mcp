@@ -223,7 +223,6 @@ async function main() {
             execSync('gh repo star saurabhsharma2u/search-console-mcp', { stdio: 'inherit' });
             printSuccess('Thanks for your support! ⭐');
         } catch (error) {
-            printInfo('Could not auto-star the repo (GitHub CLI might be missing).');
             console.log('Please star us manually at: https://github.com/saurabhsharma2u/search-console-mcp');
         }
     } else {

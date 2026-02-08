@@ -286,3 +286,277 @@ export async function getTopPages(
     totalRows: sortedRows.length
   };
 }
+
+/**
+ * Get performance breakdown by country.
+ */
+export async function getPerformanceByCountry(
+  siteUrl: string,
+  options: {
+    days?: number;
+    limit?: number;
+    sortBy?: 'clicks' | 'impressions';
+  } = {}
+): Promise<TopItemsResult> {
+  const DATA_DELAY_DAYS = 3;
+  const days = options.days ?? 28;
+  const limit = options.limit ?? 250; // Higher default limit for countries
+
+  const endDate = new Date();
+  endDate.setDate(endDate.getDate() - DATA_DELAY_DAYS);
+  const startDate = new Date(endDate);
+  startDate.setDate(startDate.getDate() - days);
+
+  const startDateStr = startDate.toISOString().split('T')[0];
+  const endDateStr = endDate.toISOString().split('T')[0];
+
+  const rows = await queryAnalytics({
+    siteUrl,
+    startDate: startDateStr,
+    endDate: endDateStr,
+    dimensions: ['country'],
+    limit
+  });
+
+  const sortKey = options.sortBy ?? 'clicks';
+  const sortedRows = [...rows].sort((a, b) => (b[sortKey] ?? 0) - (a[sortKey] ?? 0));
+
+  return {
+    items: sortedRows.map(row => ({
+      key: row.keys?.[0] ?? '',
+      clicks: row.clicks ?? 0,
+      impressions: row.impressions ?? 0,
+      ctr: row.ctr ?? 0,
+      position: row.position ?? 0
+    })),
+    startDate: startDateStr,
+    endDate: endDateStr,
+    totalRows: sortedRows.length
+  };
+}
+
+/**
+ * Get performance breakdown by search appearance.
+ */
+export async function getPerformanceBySearchAppearance(
+  siteUrl: string,
+  options: {
+    days?: number;
+    limit?: number;
+    sortBy?: 'clicks' | 'impressions';
+  } = {}
+): Promise<TopItemsResult> {
+  const DATA_DELAY_DAYS = 3;
+  const days = options.days ?? 28;
+  const limit = options.limit ?? 50;
+
+  const endDate = new Date();
+  endDate.setDate(endDate.getDate() - DATA_DELAY_DAYS);
+  const startDate = new Date(endDate);
+  startDate.setDate(startDate.getDate() - days);
+
+  const startDateStr = startDate.toISOString().split('T')[0];
+  const endDateStr = endDate.toISOString().split('T')[0];
+
+  const rows = await queryAnalytics({
+    siteUrl,
+    startDate: startDateStr,
+    endDate: endDateStr,
+    dimensions: ['searchAppearance'],
+    limit
+  });
+
+  const sortKey = options.sortBy ?? 'clicks';
+  const sortedRows = [...rows].sort((a, b) => (b[sortKey] ?? 0) - (a[sortKey] ?? 0));
+
+  return {
+    items: sortedRows.map(row => ({
+      key: row.keys?.[0] ?? '',
+      clicks: row.clicks ?? 0,
+      impressions: row.impressions ?? 0,
+      ctr: row.ctr ?? 0,
+      position: row.position ?? 0
+    })),
+    startDate: startDateStr,
+    endDate: endDateStr,
+    totalRows: sortedRows.length
+  };
+}
+
+export interface TrendItem {
+  key: string;
+  metric: 'clicks' | 'impressions' | 'ctr' | 'position';
+  change: number;
+  changePercent: number;
+  trend: 'rising' | 'declining';
+  currentValue: number;
+  previousValue: number;
+}
+
+export interface AnomalyItem {
+  date: string;
+  metric: 'clicks' | 'impressions' | 'ctr' | 'position';
+  value: number;
+  expectedValue: number;
+  deviation: number;
+  type: 'spike' | 'drop';
+}
+
+/**
+ * Detect significant trends (rising/declining) in queries or pages.
+ */
+export async function detectTrends(
+  siteUrl: string,
+  options: {
+    dimension?: 'query' | 'page';
+    days?: number;
+    threshold?: number; // Minimum percentage change (default: 10%)
+    minClicks?: number; // Minimum clicks to considers (default: 10)
+    limit?: number;
+  } = {}
+): Promise<TrendItem[]> {
+  const DATA_DELAY_DAYS = 3;
+  const days = options.days ?? 28;
+  const threshold = options.threshold ?? 10;
+  const minClicks = options.minClicks ?? 100;
+  const dimension = options.dimension ?? 'query';
+  const limit = options.limit ?? 20;
+
+  // Split the period into two halves
+  const midPoint = Math.floor(days / 2);
+
+  const endDate = new Date();
+  endDate.setDate(endDate.getDate() - DATA_DELAY_DAYS);
+
+  const midDate = new Date(endDate);
+  midDate.setDate(midDate.getDate() - midPoint);
+
+  const startDate = new Date(midDate);
+  startDate.setDate(startDate.getDate() - midPoint);
+
+  const [currentPeriod, previousPeriod] = await Promise.all([
+    queryAnalytics({
+      siteUrl,
+      startDate: midDate.toISOString().split('T')[0],
+      endDate: endDate.toISOString().split('T')[0],
+      dimensions: [dimension],
+      limit: 5000 // Get enough data to find trends
+    }),
+    queryAnalytics({
+      siteUrl,
+      startDate: startDate.toISOString().split('T')[0],
+      endDate: midDate.toISOString().split('T')[0],
+      dimensions: [dimension],
+      limit: 5000
+    })
+  ]);
+
+  const trends: TrendItem[] = [];
+  const prevMap = new Map(previousPeriod.map(r => [r.keys?.[0], r]));
+
+  for (const curr of currentPeriod) {
+    const key = curr.keys?.[0];
+    if (!key) continue;
+
+    const prev = prevMap.get(key);
+
+    // Only analyze if significant volume
+    if ((curr.clicks ?? 0) < minClicks && (prev?.clicks ?? 0) < minClicks) continue;
+
+    const currClicks = curr.clicks ?? 0;
+    const prevClicks = prev?.clicks ?? 0;
+
+    if (prevClicks > 0) {
+      const change = currClicks - prevClicks;
+      const percent = (change / prevClicks) * 100;
+
+      if (Math.abs(percent) >= threshold) {
+        trends.push({
+          key,
+          metric: 'clicks',
+          change,
+          changePercent: parseFloat(percent.toFixed(2)),
+          trend: percent > 0 ? 'rising' : 'declining',
+          currentValue: currClicks,
+          previousValue: prevClicks
+        });
+      }
+    } else if (currClicks >= minClicks) {
+      // New trending item (infinity % increase)
+      trends.push({
+        key,
+        metric: 'clicks',
+        change: currClicks,
+        changePercent: 100, // Treat new items as 100% rising for simplicity
+        trend: 'rising',
+        currentValue: currClicks,
+        previousValue: 0
+      });
+    }
+  }
+
+  return trends
+    .sort((a, b) => Math.abs(b.change) - Math.abs(a.change))
+    .slice(0, limit);
+}
+
+/**
+ * Detect daily anomalies where metrics deviate significantly from moving average.
+ */
+export async function detectAnomalies(
+  siteUrl: string,
+  options: {
+    days?: number;
+    threshold?: number; // Deviation multiplier (e.g. 2.0 = 200% deviation)
+  } = {}
+): Promise<AnomalyItem[]> {
+  const DATA_DELAY_DAYS = 3;
+  const days = options.days ?? 30;
+  const threshold = options.threshold ?? 2.5; // Default 2.5 std dev
+
+  const endDate = new Date();
+  endDate.setDate(endDate.getDate() - DATA_DELAY_DAYS);
+
+  const startDate = new Date(endDate);
+  startDate.setDate(startDate.getDate() - days); // Look back further for baseline
+
+  const rows = await queryAnalytics({
+    siteUrl,
+    startDate: startDate.toISOString().split('T')[0],
+    endDate: endDate.toISOString().split('T')[0],
+    dimensions: ['date']
+  });
+
+  const anomalies: AnomalyItem[] = [];
+
+  if (rows.length < 5) return [];
+
+  const clicks = rows.map(r => r.clicks ?? 0);
+  const avgClicks = clicks.reduce((a, b) => a + b, 0) / clicks.length;
+
+  // Standard Deviation
+  const variance = clicks.reduce((a, b) => a + Math.pow(b - avgClicks, 2), 0) / clicks.length;
+  const stdDev = Math.sqrt(variance);
+
+  // Heuristic: Flag if > threshold stdDev away
+  for (const row of rows) {
+    const val = row.clicks ?? 0;
+    const date = row.keys?.[0] ?? '';
+
+    // statistical Z-score check
+    const zScore = stdDev === 0 ? 0 : (val - avgClicks) / stdDev;
+
+    if (Math.abs(zScore) > threshold) {
+      anomalies.push({
+        date,
+        metric: 'clicks',
+        value: val,
+        expectedValue: Math.round(avgClicks),
+        deviation: parseFloat(((val - avgClicks) / avgClicks * 100).toFixed(2)),
+        type: zScore > 0 ? 'spike' : 'drop'
+      });
+    }
+  }
+
+  return anomalies.reverse(); // Most recent first
+}

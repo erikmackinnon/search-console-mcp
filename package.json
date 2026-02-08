@@ -1,6 +1,7 @@
 {
   "name": "search-console-mcp",
   "version": "1.9.0",
+  "mcpName": "io.github.saurabhsharma2u/search-console-mcp",
   "description": "MCP server for Google Search Console API",
   "type": "module",
   "main": "dist/index.js",
@@ -16,6 +17,7 @@
   "scripts": {
     "build": "tsc",
     "test": "vitest run",
+    "deploy:registry": "mcp-publisher publish",
     "prepublishOnly": "npm run build"
   },
   "keywords": [

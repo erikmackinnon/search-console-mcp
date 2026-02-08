@@ -50,8 +50,15 @@ This document outlines the planned features and improvements for this project.
 - `seo_cannibalization` - Detect pages competing for the same keywords
 - `seo_quick_wins` - Find pages close to page 1 (positions 11-20)
 
-### v1.9.0 - Schema Validator
+### v1.9.0 - Schema Validator & Experience
 - `schema_validate` - Validate structured data (JSON-LD)
+- Enhanced Setup Wizard with project support and better UX
+
+### v1.10.0 - Advanced Analytics
+- `analytics_trends` - Detect traffic trends (growing/declining)
+- `analytics_anomalies` - Identify unusual spikes or drops
+- `analytics_by_country` - Performance breakdown by country
+- `analytics_search_appearance` - Data by search appearance type
 
 ---
 
@@ -62,18 +69,7 @@ _Nothing currently in progress_
 ---
 
 ## 📋 Planned
-
-### v1.6.0 - Advanced Analytics
-
-| Feature | Description |
-|---------|-------------|
-| `analytics_trends` | Detect traffic trends (growing/declining) |
-| `analytics_anomalies` | Identify unusual spikes or drops |
-| `analytics_by_country` | Performance breakdown by country |
-| `analytics_search_appearance` | Data by search appearance type |
-| Date presets | `last7days`, `last30days`, `lastQuarter` |
-
-### v1.7.0 - Bulk Operations
+### v1.11.0 - Bulk Operations
 
 | Feature | Description |
 |---------|-------------|
@@ -82,15 +78,7 @@ _Nothing currently in progress_
 | Export to CSV/JSON | Export analytics data |
 | Batch URL status | Check indexing status for URL list |
 
-### v1.8.0 - SEO Insights
 
-| Feature | Description |
-|---------|-------------|
-| `seo_recommendations` | Auto-generate SEO improvement suggestions |
-| Cannibalization detection | Find competing pages for same keywords |
-| Content gap analysis | Keywords competitors rank for |
-| Low-hanging fruit finder | High-impression, low-position keywords |
-| SERP feature opportunities | Identify rich snippet potential |
 
 ### v2.0.0 - OAuth2 Support
 

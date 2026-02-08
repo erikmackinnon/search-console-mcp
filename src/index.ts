@@ -268,6 +268,91 @@ server.tool(
   }
 );
 
+server.tool(
+  "analytics_by_country",
+  "Get performance breakdown by country for the last N days.",
+  {
+    siteUrl: z.string().describe("The URL of the site"),
+    days: z.number().optional().describe("Number of days to look back (default: 28)"),
+    limit: z.number().optional().describe("Number of countries to return (default: 250)"),
+    sortBy: z.enum(["clicks", "impressions"]).optional().describe("Sort by clicks or impressions (default: clicks)")
+  },
+  async ({ siteUrl, days, limit, sortBy }) => {
+    try {
+      const result = await analytics.getPerformanceByCountry(siteUrl, { days, limit, sortBy });
+      return {
+        content: [{ type: "text", text: JSON.stringify(result, null, 2) }]
+      };
+    } catch (error) {
+      return formatError(error);
+    }
+  }
+);
+
+server.tool(
+  "analytics_search_appearance",
+  "Get performance breakdown by search appearance type for the last N days.",
+  {
+    siteUrl: z.string().describe("The URL of the site"),
+    days: z.number().optional().describe("Number of days to look back (default: 28)"),
+    limit: z.number().optional().describe("Number of types to return (default: 50)"),
+    sortBy: z.enum(["clicks", "impressions"]).optional().describe("Sort by clicks or impressions (default: clicks)")
+  },
+  async ({ siteUrl, days, limit, sortBy }) => {
+    try {
+      const result = await analytics.getPerformanceBySearchAppearance(siteUrl, { days, limit, sortBy });
+      return {
+        content: [{ type: "text", text: JSON.stringify(result, null, 2) }]
+      };
+    } catch (error) {
+      return formatError(error);
+    }
+  }
+);
+
+server.tool(
+  "analytics_trends",
+  "Detect traffic trends (rising/declining) for queries or pages.",
+  {
+    siteUrl: z.string().describe("The URL of the site"),
+    dimension: z.enum(["query", "page"]).optional().describe("Dimension to analyze (default: query)"),
+    days: z.number().optional().describe("Number of days to analyze (default: 28)"),
+    threshold: z.number().optional().describe("Minimum percentage change to consider (default: 10)"),
+    minClicks: z.number().optional().describe("Minimum clicks required to be considered (default: 100)"),
+    limit: z.number().optional().describe("Max results to return (default: 20)")
+  },
+  async ({ siteUrl, dimension, days, threshold, minClicks, limit }) => {
+    try {
+      const result = await analytics.detectTrends(siteUrl, { dimension, days, threshold, minClicks, limit });
+      return {
+        content: [{ type: "text", text: JSON.stringify(result, null, 2) }]
+      };
+    } catch (error) {
+      return formatError(error);
+    }
+  }
+);
+
+server.tool(
+  "analytics_anomalies",
+  "Identify unusual daily spikes or drops in traffic.",
+  {
+    siteUrl: z.string().describe("The URL of the site"),
+    days: z.number().optional().describe("Number of days to look back for baseline (default: 30)"),
+    threshold: z.number().optional().describe("Sensitivity threshold (Standard Deviations, default: 2.5)")
+  },
+  async ({ siteUrl, days, threshold }) => {
+    try {
+      const result = await analytics.detectAnomalies(siteUrl, { days, threshold });
+      return {
+        content: [{ type: "text", text: JSON.stringify(result, null, 2) }]
+      };
+    } catch (error) {
+      return formatError(error);
+    }
+  }
+);
+
 // Inspection Tools
 server.tool(
   "inspection_inspect",
@@ -423,6 +508,24 @@ server.tool(
       const result = await schemaValidator.validateSchema(data, type as 'url' | 'html' | 'json');
       return {
         content: [{ type: "text", text: JSON.stringify(result, null, 2) }]
+      };
+    } catch (error) {
+      return formatError(error);
+    }
+  }
+);
+
+// Support Tools
+server.tool(
+  "util_star_repo",
+  "Star the GitHub repository to support the project. Uses GitHub CLI if available, or opens a browser.",
+  {},
+  async () => {
+    try {
+      const { starRepository } = await import("./tools/support.js");
+      const result = await starRepository();
+      return {
+        content: [{ type: "text", text: result }]
       };
     } catch (error) {
       return formatError(error);

@@ -4,6 +4,8 @@ A Model Context Protocol (MCP) server that provides AI agents with access to Goo
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
+[![Tests](https://github.com/saurabhsharma2u/search-console-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/saurabhsharma2u/search-console-mcp/actions/workflows/ci.yml)
+
 ## Quick Start
 
 For users with an MCP-compatible client (like Claude Desktop):
