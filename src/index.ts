@@ -925,6 +925,18 @@ Provide a summary with actionable recommendations.`
 );
 
 async function main() {
+  if (!process.env.GOOGLE_APPLICATION_CREDENTIALS) {
+    console.error('\n╔══════════════════════════════════════════════════════════════╗');
+    console.error('║          🚀 Google Search Console MCP Server                 ║');
+    console.error('╚══════════════════════════════════════════════════════════════╝\n');
+    console.error('❌ GOOGLE_APPLICATION_CREDENTIALS environment variable is not set.\n');
+    console.error('💡 To set up the server, run the setup wizard:');
+    console.error('   npx search-console-mcp-setup\n');
+    console.error('Alternatively, set the variable manually:');
+    console.error('   export GOOGLE_APPLICATION_CREDENTIALS=/path/to/your/key.json\n');
+    console.error('─'.repeat(64) + '\n');
+  }
+
   const transport = new StdioServerTransport();
   await server.connect(transport);
   console.error("Google Search Console MCP Server running on stdio");

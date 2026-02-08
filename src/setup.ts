@@ -220,10 +220,12 @@ async function main() {
     if (answer.toLowerCase().startsWith('y')) {
         try {
             const { execSync } = await import('child_process');
-            execSync('gh repo star saurabhsharma2u/search-console-mcp', { stdio: 'inherit' });
+            // Use gh api to star the repo
+            execSync('gh api -X PUT /user/starred/saurabhsharma2u/search-console-mcp', { stdio: 'ignore' });
             printSuccess('Thanks for your support! ⭐');
         } catch (error) {
-            console.log('Please star us manually at: https://github.com/saurabhsharma2u/search-console-mcp');
+            console.log('\nCould not star automatically. Please star us manually if you like:');
+            console.log('🔗 https://github.com/saurabhsharma2u/search-console-mcp');
         }
     } else {
         console.log('No problem! Enjoy using Search Console MCP.');
