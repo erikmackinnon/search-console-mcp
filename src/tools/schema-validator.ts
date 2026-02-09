@@ -2,12 +2,25 @@
 import Validator from '@adobe/structured-data-validator';
 import * as cheerio from 'cheerio';
 
-interface ValidationResult {
+/**
+ * Result of a structured data (schema) validation check.
+ */
+export interface ValidationResult {
+    /** Whether all schemas were found and valid. */
     valid: boolean;
+    /** A list of validation errors found across all detected schemas. */
     errors: any[];
+    /** The original JSON-LD schemas extracted from the input. */
     schemas: any[];
 }
 
+/**
+ * Validates structured data (JSON-LD) from a URL, raw HTML, or a JSON string.
+ *
+ * @param input - The source to validate (URL, HTML string, or JSON string).
+ * @param type - The type of input being provided.
+ * @returns A result object indicating validity and listing any errors found.
+ */
 export async function validateSchema(
     input: string,
     type: 'url' | 'html' | 'json'

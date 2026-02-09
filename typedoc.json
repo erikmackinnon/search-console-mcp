@@ -1,0 +1,28 @@
+{
+    "$schema": "https://typedoc.org/schema.json",
+    "entryPoints": [
+        "src/index.ts",
+        "src/tools/advanced-analytics.ts",
+        "src/tools/analytics.ts",
+        "src/tools/inspection.ts",
+        "src/tools/pagespeed.ts",
+        "src/tools/schema-validator.ts",
+        "src/tools/seo-insights.ts",
+        "src/tools/seo-primitives.ts",
+        "src/tools/sitemaps.ts",
+        "src/tools/sites.ts"
+    ],
+    "out": "docs-site",
+    "name": "Google Search Console MCP Server API",
+    "includeVersion": true,
+    "plugin": [],
+    "exclude": [
+        "node_modules",
+        "tests",
+        "dist"
+    ],
+    "theme": "default",
+    "githubPages": true,
+    "readme": "README.md",
+    "cleanOutputDir": true
+}

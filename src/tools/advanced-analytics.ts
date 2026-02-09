@@ -1,15 +1,24 @@
 import { queryAnalytics, detectAnomalies, AnomalyItem } from './analytics.js';
 
+/**
+ * Result of a traffic drop attribution analysis.
+ */
 export interface DropAttribution {
+    /** The date when the drop occurred. */
     date: string;
+    /** The metric analyzed (e.g., 'clicks'). */
     metric: string;
+    /** The total difference between actual and expected value. */
     totalDrop: number;
+    /** Estimated loss in absolute clicks/impressions per device type. */
     deviceImpact: {
         mobile: number;
         desktop: number;
         tablet: number;
     };
+    /** A human-readable summary of the most likely cause based on device data. */
     primaryCause: string;
+    /** If the drop correlates with a known Google Algorithm Update, its name is included here. */
     possibleAlgorithmUpdate?: string;
 }
 
@@ -28,7 +37,11 @@ const ALGORITHM_UPDATES = [
 ];
 
 /**
- * Identify the cause of a significant traffic drop by analyzing device distribution.
+ * Identify the cause of a significant traffic drop by analyzing device distribution and algorithm updates.
+ *
+ * @param siteUrl - The URL of the site to analyze.
+ * @param options - Configuration including the lookback period and anomaly threshold.
+ * @returns A detailed attribution object or null if no significant drop is found.
  */
 export async function analyzeDropAttribution(
     siteUrl: string,
@@ -104,24 +117,43 @@ export async function analyzeDropAttribution(
     };
 }
 
+/**
+ * A single data point in a time series analysis.
+ */
 export interface TimeSeriesData {
+    /** The date of the data point (for daily granularity). */
     date?: string;
-    week?: string; // For weekly granularity
+    /** The start of the week (for weekly granularity). */
+    week?: string;
+    /** Any dimensions used for grouping (e.g., device, country). */
     dimensions?: Record<string, string>;
+    /** The raw metric values for this point. */
     metrics: Record<string, number>;
+    /** Calculated rolling averages for each metric. */
     rollingAverages?: Record<string, number>;
+    /** Whether this point represents a detected seasonal peak. */
     isSeasonalPeak?: boolean;
 }
 
+/**
+ * Summary of trend analysis and future projections.
+ */
 export interface ForecastResult {
+    /** The detected direction of the current trend. */
     currentTrend: 'up' | 'down' | 'stable';
+    /** Projected future values for each analyzed metric. */
     forecastedValues: Record<string, number[]>;
-    seasonalityStrength: number; // 0 to 1
+    /** The calculated regularity of patterns in the data (0 to 1). */
+    seasonalityStrength: number;
 }
 
 /**
  * Advanced time series analysis for smoothing, seasonality, and forecasting.
- * Supports dynamic dimensions, metrics, granularities, and filters.
+ * Supports dynamic dimensions, multiple metrics, granularities, and custom filtering.
+ *
+ * @param siteUrl - The URL of the site to analyze.
+ * @param options - Analysis configuration including metrics, granularity, and forecast length.
+ * @returns Historical data points with rolling averages and a forecast object.
  */
 export async function getTimeSeriesInsights(
     siteUrl: string,
