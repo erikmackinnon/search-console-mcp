@@ -27,6 +27,35 @@ Args: {
 }
 \`\`\`
 
+| Tool | Description |
+|------|-------------|
+| \`analytics_drop_attribution\` | Identify if a traffic drop was device-specific or algorithm-linked. |
+| \`analytics_time_series\` | Get rolling averages, seasonality strength, and trend forecasts. |
+
+---
+
+## Advanced Analytics Patterns
+
+### Attribute a Traffic Drop
+Identify if a recent drop was caused by mobile/desktop devices or correlates with a Google Algorithm Update:
+\`\`\`json
+{
+  "siteUrl": "https://example.com",
+  "days": 30
+}
+\`\`\`
+
+### Time Series Forecasting
+Get a 14-day rolling average and forecast the next 14 days of traffic:
+\`\`\`json
+{
+  "siteUrl": "https://example.com",
+  "days": 60,
+  "window": 14,
+  "forecastDays": 14
+}
+\`\`\`
+
 ---
 
 ## Analytics Patterns

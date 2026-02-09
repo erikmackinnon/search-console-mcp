@@ -55,10 +55,16 @@ This document outlines the planned features and improvements for this project.
 - Enhanced Setup Wizard with project support and better UX
 
 ### v1.10.0 - Advanced Analytics
-- `analytics_trends` - Detect traffic trends (growing/declining)
-- `analytics_anomalies` - Identify unusual spikes or drops
-- `analytics_by_country` - Performance breakdown by country
-- `analytics_search_appearance` - Data by search appearance type
+- \`analytics_trends\` - Detect traffic trends (growing/declining)
+- \`analytics_anomalies\` - Identify unusual spikes or drops
+- \`analytics_by_country\` - Performance breakdown by country
+- \`analytics_search_appearance\` - Data by search appearance type
+
+### v1.11.0 - Attribution & Forecasting
+- \`analytics_drop_attribution\` - Device impact & Google Algorithm correlation
+- \`analytics_time_series\` - Dynamic rolling averages & trend forecasting
+- **Security Hardening**: Path traversal protection in setup wizard
+- **Expanded Documentation**: Algorithm updates reference (\`docs://algorithm-updates\`)
 
 ---
 

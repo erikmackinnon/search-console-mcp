@@ -29,6 +29,7 @@ We take your data security seriously. This tool is designed to be **local-first*
 
 *   **Credentials Never Logged**: Your Google Service Account keys are used *only* in memory to authenticate with Google APIs. They are never written to disk, logs, or sent to any third-party server.
 *   **Local Execution**: The code runs entirely on your local machine (or wherever you host your MCP server).
+*   **Path Traversal Protection**: The setup wizard implements strict validation for file paths, including null-byte removal, extension enforcement (.json), and size limits (1MB) to prevent unauthorized file access.
 *   **Direct Communication**: All API calls go directly from your machine to Google's servers (`googleapis.com`). There is no middleman or proxy server.
 *   **Open Source**: The code is fully open source. You can audit exactly how your credentials are used in `src/google-client.ts`.
 
@@ -63,6 +64,8 @@ Copy and paste these into your MCP client (Claude Desktop, etc.) to get immediat
 - **Advanced Analytics**: Query performance data with powerful filters (Regex supported).
     - *New*: Support for 'News', 'Discover', 'Image' search types.
     - *New*: 'Fresh' data support for real-time monitoring.
+    - *New*: **Drop Attribution** to identify device-level traffic losses.
+    - *New*: **Time Series Insights** with rolling averages and trend forecasting.
 - **Trend Detection**: Automatically identify rising or falling trends in your traffic.
 - **Anomaly Detection**: Spot unusual spikes or drops that need attention.
 - **Sitemaps Management**: List, submit, and validte sitemaps.
@@ -118,6 +121,8 @@ Add this to your `claude_desktop_config.json`:
 | `analytics_query` | Master tool for raw data. Supports `dimensions`, `filters`, `aggregationType` (byPage/byProperty), `dataState` (final/all), and `type` (web/image/news/discover). |
 | `analytics_trends` | Detect trends (rising/falling) for specific queries or pages. |
 | `analytics_anomalies` | Detect statistical anomalies in daily traffic. |
+| `analytics_drop_attribution` | **[NEW]** Attribute traffic drops to mobile/desktop or correlate with known Google Algorithm Updates. |
+| `analytics_time_series` | **[NEW]** Advanced time series with rolling averages, seasonality detection, and forecasting. |
 | `analytics_compare_periods` | Compare two date ranges (e.g., WoW, MoM). |
 | `seo_brand_vs_nonbrand` | **[NEW]** Analyze performance split between Brand vs Non-Brand traffic. |
 

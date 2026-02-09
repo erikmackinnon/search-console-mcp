@@ -17,6 +17,7 @@
   "scripts": {
     "build": "tsc",
     "test": "vitest run",
+    "docs": "typedoc",
     "deploy:registry": "mcp-publisher publish",
     "prepublishOnly": "npm run build"
   },
@@ -39,6 +40,7 @@
   "devDependencies": {
     "@types/node": "^25.2.0",
     "@vitest/coverage-v8": "^4.0.18",
+    "typedoc": "^0.28.16",
     "typescript": "^5.9.3",
     "vitest": "^4.0.18"
   }

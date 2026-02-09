@@ -1,62 +1,120 @@
 import { getSearchConsoleClient } from '../google-client.js';
 import { searchconsole_v1 } from 'googleapis';
 
+/**
+ * Options for querying Google Search Console analytics data.
+ */
 export interface AnalyticsOptions {
+  /** The URL of the property (site or domain) in GSC. */
   siteUrl: string;
+  /** Start date in YYYY-MM-DD format. */
   startDate: string;
+  /** End date in YYYY-MM-DD format. */
   endDate: string;
+  /** Dimensions to group data by (e.g., 'query', 'page', 'device', 'country', 'date'). */
   dimensions?: string[];
+  /** Search type: 'web', 'image', 'video', 'news', 'discover', or 'googleNews'. Defaults to 'web'. */
   type?: string;
+  /** Optional filters to refine the query. */
   filters?: Array<{
     dimension: string;
     operator: string;
     expression: string;
   }>;
+  /** Whether to aggregate data by property or by page. Defaults to 'auto'. */
   aggregationType?: 'auto' | 'byProperty' | 'byPage';
+  /** Data state: 'final' (stable data only) or 'all' (includes fresh, volatile data). Defaults to 'final'. */
   dataState?: 'final' | 'all';
+  /** Maximum number of rows to return. Max 25,000. */
   limit?: number;
+  /** Zero-based index of the first row to return. */
   startRow?: number;
 }
 
+/**
+ * Aggregate performance metrics for a specific site and period.
+ */
 export interface PerformanceSummary {
+  /** Total clicks received from Google Search. */
   clicks: number;
+  /** Total times the site appeared in search results. */
   impressions: number;
+  /** Average click-through rate (clicks / impressions). */
   ctr: number;
+  /** Average ranking position in search results. */
   position: number;
+  /** The start date of the reporting period. */
   startDate: string;
+  /** The end date of the reporting period. */
   endDate: string;
 }
 
+/**
+ * Result of comparing performance between two date ranges.
+ */
 export interface PeriodComparison {
+  /** Metrics for the primary (current) period. */
   period1: PerformanceSummary;
+  /** Metrics for the comparison (past) period. */
   period2: PerformanceSummary;
+  /** Absolute and percentage changes between the two periods. */
   changes: {
+    /** Change in absolute clicks. */
     clicks: number;
+    /** Percentage change in clicks. */
     clicksPercent: number;
+    /** Change in absolute impressions. */
     impressions: number;
+    /** Percentage change in impressions. */
     impressionsPercent: number;
+    /** Change in absolute CTR. */
     ctr: number;
+    /** Percentage change in CTR. */
     ctrPercent: number;
+    /** Change in absolute average position. */
     position: number;
+    /** Percentage change in average position. */
     positionPercent: number;
   };
 }
 
+/**
+ * A simplified representation of a search dimension (query, page, etc.) and its metrics.
+ */
 export interface TopItem {
+  /** The value of the dimension (e.g., the query string or page URL). */
   key: string;
+  /** Total clicks. */
   clicks: number;
+  /** Total impressions. */
   impressions: number;
+  /** Average click-through rate. */
   ctr: number;
+  /** Average ranking position. */
   position: number;
 }
 
+/**
+ * Result containing a list of top-performing items for a period.
+ */
 export interface TopItemsResult {
+  /** The list of top items. */
   items: TopItem[];
+  /** The start date of the analysis period. */
   startDate: string;
+  /** The end date of the analysis period. */
   endDate: string;
+  /** The total number of rows returned from the API. */
   totalRows: number;
 }
 
+/**
+ * Executes a raw query against the Google Search Console Search Analytics API.
+ * This is a low-level function used by many other tools in the project.
+ *
+ * @param options - The query parameters including dates, dimensions, and filters.
+ * @returns A promise resolving to an array of data rows from GSC.
+ */
 export async function queryAnalytics(options: AnalyticsOptions): Promise<searchconsole_v1.Schema$ApiDataRow[]> {
   const client = await getSearchConsoleClient();
   const requestBody: searchconsole_v1.Schema$SearchAnalyticsQueryRequest = {
@@ -95,7 +153,11 @@ export async function queryAnalytics(options: AnalyticsOptions): Promise<searchc
 
 /**
  * Get aggregate performance metrics for the last N days.
- * Accounts for GSC data delay by using data from 3 days ago.
+ * Accounts for the standard 2-3 day GSC data delay automatically.
+ *
+ * @param siteUrl - The URL of the site to summarize.
+ * @param days - Lookback period in days. Defaults to 28.
+ * @returns Combined metrics for the requested period.
  */
 export async function getPerformanceSummary(siteUrl: string, days: number = 28): Promise<PerformanceSummary> {
   const DATA_DELAY_DAYS = 3;
@@ -138,7 +200,14 @@ export async function getPerformanceSummary(siteUrl: string, days: number = 28):
 }
 
 /**
- * Compare performance between two date periods.
+ * Compare performance metrics between two distinct date periods (e.g., Week-over-Week).
+ *
+ * @param siteUrl - The URL of the site to analyze.
+ * @param period1Start - Start of the current period.
+ * @param period1End - End of the current period.
+ * @param period2Start - Start of the comparison period.
+ * @param period2End - End of the comparison period.
+ * @returns A comparison object containing metrics for both periods and the calculated deltas.
  */
 export async function comparePeriods(
   siteUrl: string,
@@ -191,7 +260,11 @@ export async function comparePeriods(
 }
 
 /**
- * Get top queries by clicks or impressions.
+ * Get the top-performing search queries for a site.
+ *
+ * @param siteUrl - The URL of the site to analyze.
+ * @param options - Configuration including day range, limits, and optional filters.
+ * @returns A list of queries sorted by the requested metric.
  */
 export async function getTopQueries(
   siteUrl: string,
@@ -242,7 +315,11 @@ export async function getTopQueries(
 }
 
 /**
- * Get top pages by clicks or impressions.
+ * Get the top-performing pages for a site.
+ *
+ * @param siteUrl - The URL of the site to analyze.
+ * @param options - Configuration including day range, limits, and optional filters.
+ * @returns A list of pages sorted by the requested metric.
  */
 export async function getTopPages(
   siteUrl: string,
@@ -293,7 +370,11 @@ export async function getTopPages(
 }
 
 /**
- * Get performance breakdown by country.
+ * Get performance metrics segmented by country.
+ *
+ * @param siteUrl - The URL of the site to analyze.
+ * @param options - Configuration including day range and sort order.
+ * @returns A list of countries with their search performance metrics.
  */
 export async function getPerformanceByCountry(
   siteUrl: string,
@@ -341,7 +422,11 @@ export async function getPerformanceByCountry(
 }
 
 /**
- * Get performance breakdown by search appearance.
+ * Get performance metrics segmented by search appearance (e.g., 'AMP article', 'Review snippet').
+ *
+ * @param siteUrl - The URL of the site to analyze.
+ * @param options - Configuration including day range and sort order.
+ * @returns A list of search appearance types with their metrics.
  */
 export async function getPerformanceBySearchAppearance(
   siteUrl: string,
@@ -388,35 +473,59 @@ export async function getPerformanceBySearchAppearance(
   };
 }
 
+/**
+ * Represents a significant change in performance for a specific item.
+ */
 export interface TrendItem {
+  /** The item identifier (e.g., the query or page). */
   key: string;
+  /** The specific metric being tracked. */
   metric: 'clicks' | 'impressions' | 'ctr' | 'position';
+  /** The absolute change between periods. */
   change: number;
+  /** The percentage change between periods. */
   changePercent: number;
+  /** Whether the metric is rising or declining. */
   trend: 'rising' | 'declining';
+  /** The value in the most recent period. */
   currentValue: number;
+  /** The value in the preceding period. */
   previousValue: number;
 }
 
+/**
+ * Represents a data point that deviates significantly from the expected value.
+ */
 export interface AnomalyItem {
+  /** The date of the anomaly. */
   date: string;
+  /** The metric where the anomaly was detected. */
   metric: 'clicks' | 'impressions' | 'ctr' | 'position';
+  /** The actual recorded value. */
   value: number;
+  /** The expected value based on the historical baseline. */
   expectedValue: number;
+  /** The percentage deviation from the expected value. */
   deviation: number;
+  /** Whether the anomaly is a spike (increase) or a drop (decrease). */
   type: 'spike' | 'drop';
 }
 
 /**
- * Detect significant trends (rising/declining) in queries or pages.
+ * Detect significant rising or declining trends in queries or pages.
+ * Compares two consecutive equal periods to identify momentum.
+ *
+ * @param siteUrl - The URL of the site to analyze.
+ * @param options - Configuration including dimension, day range, and sensitivity thresholds.
+ * @returns A list of trending items.
  */
 export async function detectTrends(
   siteUrl: string,
   options: {
     dimension?: 'query' | 'page';
     days?: number;
-    threshold?: number; // Minimum percentage change (default: 10%)
-    minClicks?: number; // Minimum clicks to considers (default: 10)
+    threshold?: number;
+    minClicks?: number;
     limit?: number;
   } = {}
 ): Promise<TrendItem[]> {
@@ -506,13 +615,18 @@ export async function detectTrends(
 }
 
 /**
- * Detect daily anomalies where metrics deviate significantly from moving average.
+ * Detect daily anomalies where metrics deviate significantly from a statistical moving average.
+ * Uses a Z-score based calculation to identify outliers.
+ *
+ * @param siteUrl - The URL of the site to analyze.
+ * @param options - Configuration including standard day range and deviation threshold.
+ * @returns A list of detected spikes or drops.
  */
 export async function detectAnomalies(
   siteUrl: string,
   options: {
     days?: number;
-    threshold?: number; // Deviation multiplier (e.g. 2.0 = 200% deviation)
+    threshold?: number;
   } = {}
 ): Promise<AnomalyItem[]> {
   const DATA_DELAY_DAYS = 3;

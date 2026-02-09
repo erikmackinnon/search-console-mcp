@@ -3,3 +3,4 @@ dist/
 coverage/
 .env
 .mcpregistry_*
+docs-site/

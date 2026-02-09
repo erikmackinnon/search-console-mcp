@@ -3,35 +3,55 @@ import { queryAnalytics } from './analytics.js';
 /**
  * Insight: A single SEO recommendation or finding
  */
+/**
+ * A single SEO recommendation or finding.
+ */
 export interface SEOInsight {
+    /** The type of insight (opportunity, warning, or success). */
     type: 'opportunity' | 'warning' | 'success';
+    /** The thematic area of the insight (e.g., 'Rankings', 'Content'). */
     category: string;
+    /** A concise title summarizing the finding. */
     title: string;
+    /** A detailed explanation of the insight and its significance. */
     description: string;
+    /** The urgency level of addressing this insight. */
     priority: 'high' | 'medium' | 'low';
+    /** Optional raw data supporting the insight. */
     data?: Record<string, unknown>;
 }
 
 /**
  * Low-hanging fruit: Keywords with high impressions but low position (potential quick wins)
  */
+/**
+ * Keywords with high impressions but low ranking position, representing potential quick wins.
+ */
 export interface LowHangingFruit {
+    /** The search query string. */
     query: string;
+    /** Total impressions for the period. */
     impressions: number;
+    /** Total clicks for the period. */
     clicks: number;
+    /** Average click-through rate. */
     ctr: number;
+    /** Average ranking position. */
     position: number;
-    potentialClicks: number; // Estimated clicks if moved to position 1-3
+    /** Estimated additional clicks if position moved to top 3. */
+    potentialClicks: number;
 }
 
 /**
  * Cannibalization: Multiple pages competing for the same query
  */
 /**
- * Enhaced Cannibalization Issue
+ * A detected keyword cannibalization issue where multiple pages compete for same query.
  */
 export interface CannibalizationIssue {
+    /** The search query with multiple ranking pages. */
     query: string;
+    /** The details of the pages competing for this query. */
     pages: Array<{
         page: string;
         clicks: number;
@@ -39,75 +59,129 @@ export interface CannibalizationIssue {
         position: number;
         ctr: number;
     }>;
+    /** Combined clicks across all competing pages. */
     totalClicks: number;
+    /** Combined impressions across all competing pages. */
     totalImpressions: number;
-    clickShareConflict: number; // 0 to 1 score of how split the traffic is
+    /** A score (0-1) representing how severely the traffic is split. */
+    clickShareConflict: number;
 }
 
 /**
  * Quick Win: Page close to page 1 that needs a push
  */
+/**
+ * A page and query pair that is close to significant traffic increases.
+ */
 export interface QuickWin {
+    /** The URL of the page. */
     page: string;
+    /** The search query. */
     query: string;
+    /** Current average ranking position. */
     position: number;
+    /** Total impressions. */
     impressions: number;
+    /** Estimated gain if moved to top positions. */
     potentialClicks: number;
 }
 
 /**
  * Low CTR Opportunity: High ranking, high impressions, low CTR
  */
+/**
+ * A high-ranking query that is underperforming in terms of clicks.
+ */
 export interface LowCTROpportunity {
+    /** The search query string. */
     query: string;
+    /** The landing page. */
     page: string;
+    /** Current average position. */
     position: number;
+    /** Total impressions. */
     impressions: number;
+    /** Total clicks. */
     clicks: number;
+    /** Current click-through rate. */
     ctr: number;
-    benchmarkCtr: number; // Expected CTR for this position
+    /** The target CTR based on the ranking position. */
+    benchmarkCtr: number;
 }
 
 /**
  * Striking Distance: Keywords ranking 8-15
  */
+/**
+ * A keyword currently ranking just off the main visibility areas.
+ */
 export interface StrikingDistanceQuery {
+    /** The search query string. */
     query: string;
+    /** The landing page. */
     page: string;
+    /** Current average position. */
     position: number;
+    /** Total impressions. */
     impressions: number;
+    /** Total clicks. */
     clicks: number;
 }
 
 /**
  * Lost Query: Lost all traffic compared to previous period
  */
+/**
+ * A query that has significantly declined in performance compared to the baseline.
+ */
 export interface LostQuery {
+    /** The search query. */
     query: string;
+    /** The landing page. */
     page: string;
+    /** Clicks in the previous period. */
     previousClicks: number;
+    /** Impressions in the previous period. */
     previousImpressions: number;
+    /** Position in the previous period. */
     previousPosition: number;
+    /** Clicks in the current period. */
     currentClicks: number;
+    /** Impressions in the current period. */
     currentImpressions: number;
+    /** Position in the current period. */
     currentPosition: number;
+    /** Total clicks lost. */
     lostClicks: number;
 }
 
 /**
  * Brand vs Non-Brand Analysis
  */
+/**
+ * Performance metrics segmented by brand vs. non-brand search queries.
+ */
 export interface BrandVsNonBrandMetrics {
+    /** The segment type. */
     segment: 'Brand' | 'Non-Brand';
+    /** Total clicks for the segment. */
     clicks: number;
+    /** Total impressions for the segment. */
     impressions: number;
+    /** Average CTR for the segment. */
     ctr: number;
+    /** Average position for the segment. */
     position: number;
+    /** Unique number of queries in this segment. */
     queryCount: number;
 }
 
 /**
- * Find low-hanging fruit keywords: high impressions, low CTR, positions 5-20
+ * Find "low-hanging fruit" keywords: high impressions, low CTR, and positions in striking distance.
+ *
+ * @param siteUrl - The URL of the site to analyze.
+ * @param options - Configuration including lookback period and volume thresholds.
+ * @returns A list of potential growth keywords.
  */
 export async function findLowHangingFruit(
     siteUrl: string,
@@ -161,8 +235,11 @@ export async function findLowHangingFruit(
 }
 
 /**
- * Detect keyword cannibalization: multiple pages ranking for the same query
- * Enhanced to find true conflicts where traffic is split.
+ * Detect keyword cannibalization where multiple pages compete for the same query.
+ *
+ * @param siteUrl - The URL of the site to analyze.
+ * @param options - Configuration including lookback period and volume thresholds.
+ * @returns A list of queries with split traffic between multiple URLs.
  */
 export async function detectCannibalization(
     siteUrl: string,
@@ -253,8 +330,11 @@ export async function detectCannibalization(
 }
 
 /**
- * Find high impression, low CTR opportunities
- * "Why am I ranking well but not getting clicks?"
+ * Identify queries where the site ranks well but converts poorly into clicks.
+ *
+ * @param siteUrl - The URL of the site to analyze.
+ * @param options - Configuration including lookback period and volume thresholds.
+ * @returns Queries that rank on page 1 but have below-benchmark CTR.
  */
 export async function findLowCTROpportunities(
     siteUrl: string,
@@ -304,8 +384,11 @@ export async function findLowCTROpportunities(
 }
 
 /**
- * Find "Striking Distance" keywords (Ranking 8-15)
- * These are easiest to push to Page 1 / Top 5.
+ * Find keywords ranking just off page 1 (positions 8-15).
+ *
+ * @param siteUrl - The URL of the site to analyze.
+ * @param options - Configuration including lookback period and results limit.
+ * @returns A list of keywords nearly ranking in high-visibility areas.
  */
 export async function findStrikingDistance(
     siteUrl: string,
@@ -343,8 +426,11 @@ export async function findStrikingDistance(
 }
 
 /**
- * Find Lost Queries
- * Queries that had traffic in previous period but zero traffic now.
+ * Identify queries that have lost significant visibility or clicks compared to the previous period.
+ *
+ * @param siteUrl - The URL of the site to analyze.
+ * @param options - Configuration including comparison window and results limit.
+ * @returns A list of previously successful keywords that have declined.
  */
 export async function findLostQueries(
     siteUrl: string,
@@ -416,8 +502,12 @@ export async function findLostQueries(
 }
 
 /**
- * Brand vs Non-Brand Analysis
- * Segments performance by regex match.
+ * Segment search performance into Brand and Non-Brand categories.
+ *
+ * @param siteUrl - The URL of the site to analyze.
+ * @param brandRegexString - A regex pattern to identify brand queries.
+ * @param options - Configuration including the lookback period.
+ * @returns Comparative metrics for brand vs. non-brand traffic segments.
  */
 export async function analyzeBrandVsNonBrand(
     siteUrl: string,
@@ -471,7 +561,11 @@ export async function analyzeBrandVsNonBrand(
 }
 
 /**
- * Find quick wins: Pages with queries at positions 11-20 (close to page 1)
+ * Find pages that are on the verge of ranking on the first page.
+ *
+ * @param siteUrl - The URL of the site to analyze.
+ * @param options - Configuration including lookback period and volume thresholds.
+ * @returns A list of "quick win" pages and their queries.
  */
 export async function findQuickWins(
     siteUrl: string,
@@ -517,7 +611,11 @@ export async function findQuickWins(
 }
 
 /**
- * Generate SEO recommendations based on site performance data
+ * Generates a set of prioritized SEO recommendations based on multi-dimensional analysis.
+ *
+ * @param siteUrl - The URL of the site to analyze.
+ * @param options - Configuration including the lookback period.
+ * @returns A sorted list of SEO insights, opportunities, and warnings.
  */
 export async function generateRecommendations(
     siteUrl: string,

@@ -2,13 +2,23 @@ import { google, pagespeedonline_v5 } from 'googleapis';
 
 const pagespeed = google.pagespeedonline('v5');
 
+/**
+ * Summary of PageSpeed Insights analysis results, including scores and CWV.
+ */
 export interface PageSpeedResult {
+    /** The analyzed URL. */
     url: string;
+    /** The strategy used (mobile or desktop). */
     strategy: 'mobile' | 'desktop';
+    /** Lighthouse Performance score (0-100). */
     performanceScore: number;
+    /** Lighthouse Accessibility score (0-100). */
     accessibilityScore: number;
+    /** Lighthouse Best Practices score (0-100). */
     bestPracticesScore: number;
+    /** Lighthouse SEO score (0-100). */
     seoScore: number;
+    /** Core Web Vitals and other key lab metrics. */
     coreWebVitals: {
         largestContentfulPaint: number | null;
         firstInputDelay: number | null;
@@ -17,6 +27,7 @@ export interface PageSpeedResult {
         timeToInteractive: number | null;
         totalBlockingTime: number | null;
     };
+    /** Historical field data from real-world user experience (CrUX). */
     loadingExperience: {
         overallCategory: string | null;
         metrics: Record<string, {
@@ -27,7 +38,11 @@ export interface PageSpeedResult {
 }
 
 /**
- * Run PageSpeed Insights analysis on a URL
+ * Run a full PageSpeed Insights analysis on a URL.
+ *
+ * @param url - The URL to analyze.
+ * @param strategy - Whether to test for 'mobile' or 'desktop'. Defaults to 'mobile'.
+ * @returns Performance, accessibility, and SEO scores along with field/lab metrics.
  */
 export async function analyzePageSpeed(
     url: string,
@@ -82,7 +97,10 @@ export async function analyzePageSpeed(
 }
 
 /**
- * Get Core Web Vitals summary for mobile and desktop
+ * Get a comparative Core Web Vitals summary for both mobile and desktop.
+ *
+ * @param url - The URL to analyze.
+ * @returns Results for both mobile and desktop strategies.
  */
 export async function getCoreWebVitals(url: string): Promise<{
     mobile: PageSpeedResult;
