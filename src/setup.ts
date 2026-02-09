@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-import { readFileSync, existsSync } from 'fs';
-import { resolve, dirname } from 'path';
+import { readFileSync, existsSync, statSync } from 'fs';
+import { resolve, dirname, extname } from 'path';
 import { createInterface } from 'readline';
 import { homedir } from 'os';
 import { fileURLToPath } from 'url';
@@ -57,10 +57,27 @@ interface ServiceAccountKey {
 
 function validateKeyFile(path: string): ServiceAccountKey | null {
     try {
-        const fullPath = resolve(path.replace('~', homedir()));
+        const sanitizedPath = path.trim().replace(/\0/g, '');
+        const fullPath = resolve(sanitizedPath.replace('~', homedir()));
 
         if (!existsSync(fullPath)) {
             printError(`File not found: ${fullPath}`);
+            return null;
+        }
+
+        const stats = statSync(fullPath);
+        if (!stats.isFile()) {
+            printError(`Not a regular file: ${fullPath}`);
+            return null;
+        }
+
+        if (extname(fullPath).toLowerCase() !== '.json') {
+            printError(`Invalid file type. Please provide a .json file.`);
+            return null;
+        }
+
+        if (stats.size > 1024 * 1024) {
+            printError(`File too large. Service account keys are typically small JSON files.`);
             return null;
         }
 
