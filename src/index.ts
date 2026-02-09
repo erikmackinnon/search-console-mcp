@@ -10,6 +10,7 @@ import * as pagespeed from "./tools/pagespeed.js";
 import * as seoInsights from "./tools/seo-insights.js";
 import * as seoPrimitives from "./tools/seo-primitives.js";
 import * as schemaValidator from "./tools/schema-validator.js";
+import * as advancedAnalytics from "./tools/advanced-analytics.js";
 import { formatError } from "./errors.js";
 
 const server = new McpServer({
@@ -347,6 +348,67 @@ server.tool(
   async ({ siteUrl, days, threshold }) => {
     try {
       const result = await analytics.detectAnomalies(siteUrl, { days, threshold });
+      return {
+        content: [{ type: "text", text: JSON.stringify(result, null, 2) }]
+      };
+    } catch (error) {
+      return formatError(error);
+    }
+  }
+);
+
+server.tool(
+  "analytics_drop_attribution",
+  "Analyze a significant traffic drop to identify if it was caused by specific devices (mobile/desktop) or coincides with known Google algorithm updates.",
+  {
+    siteUrl: z.string().describe("The URL of the site"),
+    days: z.number().optional().describe("Number of days to look back (default: 30)"),
+    threshold: z.number().optional().describe("Sensitivity threshold for drop detection (Standard Deviations, default: 2.0)")
+  },
+  async ({ siteUrl, days, threshold }) => {
+    try {
+      const result = await advancedAnalytics.analyzeDropAttribution(siteUrl, { days, threshold });
+      return {
+        content: [{ type: "text", text: result ? JSON.stringify(result, null, 2) : "No significant traffic drop detected in the specified period." }]
+      };
+    } catch (error) {
+      return formatError(error);
+    }
+  }
+);
+
+server.tool(
+  "analytics_time_series",
+  "Get advanced time series data including rolling averages, seasonality strength, and trend forecasting. Supports multi-dimensional analysis, metrics selection, and custom granularities.",
+  {
+    siteUrl: z.string().describe("The URL of the site"),
+    days: z.number().optional().describe("Number of days of history to analyze (default: 60)"),
+    startDate: z.string().optional().describe("Start date (YYYY-MM-DD)"),
+    endDate: z.string().optional().describe("End date (YYYY-MM-DD)"),
+    dimensions: z.array(z.string()).optional().describe("Dimensions to group by (default: ['date'])"),
+    metrics: z.array(z.enum(["clicks", "impressions", "ctr", "position"])).optional().describe("Metrics to analyze (default: ['clicks'])"),
+    granularity: z.enum(["daily", "weekly"]).optional().describe("Granularity of the data (default: daily)"),
+    filters: z.array(z.object({
+      dimension: z.string(),
+      operator: z.string(),
+      expression: z.string()
+    })).optional().describe("Filter groups to apply"),
+    window: z.number().optional().describe("Window size for rolling average in days/weeks (default: 7)"),
+    forecastDays: z.number().optional().describe("Number of units (days/weeks) to forecast into the future (default: 7)")
+  },
+  async ({ siteUrl, days, startDate, endDate, dimensions, metrics, granularity, filters, window, forecastDays }) => {
+    try {
+      const result = await advancedAnalytics.getTimeSeriesInsights(siteUrl, {
+        days,
+        startDate,
+        endDate,
+        dimensions,
+        metrics,
+        granularity,
+        filters,
+        window,
+        forecastDays
+      });
       return {
         content: [{ type: "text", text: JSON.stringify(result, null, 2) }]
       };
@@ -728,7 +790,7 @@ server.resource(
 );
 
 // Documentation Resources
-import { dimensionsDocs, filtersDocs, searchTypesDocs, patternsDocs } from "./docs/index.js";
+import { dimensionsDocs, filtersDocs, searchTypesDocs, patternsDocs, algorithmUpdatesDocs } from "./docs/index.js";
 
 server.resource(
   "docs-dimensions",
@@ -773,6 +835,18 @@ server.resource(
     contents: [{
       uri: uri.href,
       text: patternsDocs,
+      mimeType: "text/markdown"
+    }]
+  })
+);
+
+server.resource(
+  "docs-algorithm-updates",
+  "docs://algorithm-updates",
+  async (uri) => ({
+    contents: [{
+      uri: uri.href,
+      text: algorithmUpdatesDocs,
       mimeType: "text/markdown"
     }]
   })

@@ -12,6 +12,8 @@
 | `analytics_search_appearance` | Breakdown by search appearance (e.g., Rich Results, AMP, Videos). |
 | `analytics_trends` | Detect rising or falling trends in your traffic. |
 | `analytics_anomalies` | Identify unusual daily spikes or drops in traffic. |
+| `analytics_drop_attribution` | **[NEW]** Attribute traffic drops to mobile/desktop or correlate with known Google Algorithm Updates. |
+| `analytics_time_series` | **[NEW]** Advanced time series with rolling averages (dynamic window), seasonality strength, and trend forecasting. |
 
 ## 🎯 SEO Opportunities (Opinionated)
 | Tool | Description |
