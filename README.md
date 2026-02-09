@@ -4,6 +4,12 @@ A Model Context Protocol (MCP) server that transforms how you interact with Goog
 
 [📚 View Documentation](https://searchconsolemcp.mintlify.app/)
 
+---
+
+### [🏠 Overview](#) | [🎯 Prompts](#-magic-prompts) | [🚀 Quick Start](#-quick-start) | [🛠️ Tools](#-tools-reference)
+
+---
+
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Tests](https://github.com/saurabhsharma2u/search-console-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/saurabhsharma2u/search-console-mcp/actions/workflows/ci.yml)
 
@@ -21,7 +27,29 @@ A Model Context Protocol (MCP) server that transforms how you interact with Goog
 **Just ask:**
 > "Find low-hanging fruit keywords (positions 11-20) with high impressions that I should optimize."
 
-The MCP server handles the API calls, filtering, and analysis instantly, giving you a prioritized list of actions.
+---
+
+## 🎯 Magic Prompts
+
+Copy and paste these into your MCP client (Claude Desktop, etc.) to see the intelligence engine in action:
+
+#### �️ The Traffic Detective
+> "My traffic dropped this week compared to last. Use the anomaly detection and time-series tools to find exactly when the drop started and which pages are responsible."
+
+#### 🎯 The "Striking Distance" Hunter
+> "Find keywords for https://example.com where I'm ranking in positions 8-15 but have at least 1,000 impressions. These are my best opportunities for a quick traffic boost."
+
+#### ⚔️ The Cannibalization Cleaner
+> "Check for keyword cannibalization. Are there any queries where two or more of my pages are competing and splitting the traffic? Suggest which one should be the primary authority."
+
+#### 📈 The SEO Opportunity Scoreboard
+> "Analyze my top 50 keywords for the last 90 days. Rank them by a custom 'Opportunity Score' (Impressions / Position). Give me the top 5 specific pages to focus on."
+
+#### 📊 The Executive Health Check
+> "Run a full SEO health check for my site. Segment the results by Brand vs. Non-Brand and give me 3 high-impact actions for the upcoming week."
+
+#### ⚡ The Speed vs. Ranking Correlator
+> "Fetch the top 5 pages by impressions. For these pages, run a PageSpeed audit. Is there any correlation between low performance scores and recently declining positions?"
 
 ---
 
@@ -34,30 +62,6 @@ We take your data security seriously. This tool is designed to be **local-first*
 *   **Path Traversal Protection**: The setup wizard implements strict validation for file paths, including null-byte removal, extension enforcement (.json), and size limits (1MB) to prevent unauthorized file access.
 *   **Direct Communication**: All API calls go directly from your machine to Google's servers (`googleapis.com`). There is no middleman or proxy server.
 *   **Open Source**: The code is fully open source. You can audit exactly how your credentials are used in `src/google-client.ts`.
-
----
-
-## 🚀 Killer Prompts
-
-Copy and paste these into your MCP client (Claude Desktop, etc.) to get immediate value:
-
-**1. Find Quick Wins (Low-Hanging Fruit)**
-> "Find pages with keywords ranking on page 2 (positions 11-20) that have high impressions (>500). Suggest titles to boost them to page 1."
-
-**2. Diagnose Traffic Drops**
-> "Analyze the impact of the latest core update. Compare performance for the last 28 days vs the previous period. Which specific pages lost the most traffic?"
-
-**3. Improve Click-Through Rates (CTR)**
-> "Find queries where I rank in the top 5 but have a CTR below 3%. These represent missed opportunities. Provide 3 headline variations to improve CTR for the top result."
-
-**4. Audit for Cannibalization**
-> "Check for keyword cannibalization on my site. Are there multiple pages competing for the same high-volume keywords?"
-
-**5. Technical SEO Audit**
-> "Inspect the top 5 pages by traffic. detailed technical SEO audit using PageSpeed Insights and URL inspection. Summarize critical issues."
-
-**6. Content Gap Analysis**
-> "Analyze my 'analytics_top_queries' for the last 3 months. Identify high-impression topics I am ranking for but do not have a dedicated page for (e.g., I'm ranking with a generic homepage or category page)."
 
 ---
 
