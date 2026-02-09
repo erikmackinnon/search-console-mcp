@@ -526,9 +526,14 @@ export async function generateRecommendations(
     const { days = 28 } = options;
     const insights: SEOInsight[] = [];
 
-    // Get low-hanging fruit
-    const lowHangingFruit = await findLowHangingFruit(siteUrl, { days, limit: 10 });
+    // Run all analysis tasks in parallel
+    const [lowHangingFruit, cannibalization, quickWins] = await Promise.all([
+        findLowHangingFruit(siteUrl, { days, limit: 10 }),
+        detectCannibalization(siteUrl, { days, limit: 10 }),
+        findQuickWins(siteUrl, { days, limit: 10 })
+    ]);
 
+    // Process low-hanging fruit
     if (lowHangingFruit.length > 0) {
         const totalPotential = lowHangingFruit.reduce((sum, l) => sum + l.potentialClicks, 0);
         insights.push({
@@ -541,9 +546,7 @@ export async function generateRecommendations(
         });
     }
 
-    // Check for cannibalization
-    const cannibalization = await detectCannibalization(siteUrl, { days, limit: 10 });
-
+    // Process cannibalization
     if (cannibalization.length > 0) {
         insights.push({
             type: 'warning',
@@ -555,9 +558,7 @@ export async function generateRecommendations(
         });
     }
 
-    // Find quick wins
-    const quickWins = await findQuickWins(siteUrl, { days, limit: 10 });
-
+    // Process quick wins
     if (quickWins.length > 0) {
         insights.push({
             type: 'opportunity',
