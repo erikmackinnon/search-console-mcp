@@ -27,6 +27,26 @@ The **Model Context Protocol (MCP)** allows us to provide AI agents with specifi
 
 We believe in **deterministic intelligence**. Our tools don't just "get data"; they detect cannibalization, identify striking distance keywords, and attribute traffic drops. We provide the *brains*, you provide the *agent*.
 
+---
+
+## 🚀 Magic Prompts
+
+Try these prompts with your favorite AI agent (Claude, Cursor, etc.) to see the intelligence engine in action.
+
+### 🕵️ The Traffic Detective
+> "My traffic dropped this week compared to last. Use the anomaly detection and time-series tools to find exactly when the drop started and which pages are responsible."
+
+### 🎯 The "Striking Distance" Hunter
+> "Find keywords where I'm ranking in positions 8-15 but have at least 1,000 impressions. These are my best opportunities for a quick traffic boost."
+
+### ⚔️ The Cannibalization Cleaner
+> "Check for keyword cannibalization. Are there any queries where two or more of my pages are competing and splitting the traffic?"
+
+### 📊 The Weekly Executive Review
+> "Run a full SEO health check for my site. Segment the results by Brand vs. Non-Brand and give me 3 high-impact actions for next week."
+
+---
+
 <CardGroup cols={2}>
   <Card title="Quick Start" icon="rocket" href="/getting-started/installation">
     Get up and running in minutes.
