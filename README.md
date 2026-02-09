@@ -2,6 +2,8 @@
 
 A Model Context Protocol (MCP) server that transforms how you interact with Google Search Console. Stop exporting CSVs and start asking questions.
 
+[📚 View Documentation](https://searchconsolemcp.mintlify.app/)
+
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Tests](https://github.com/saurabhsharma2u/search-console-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/saurabhsharma2u/search-console-mcp/actions/workflows/ci.yml)
 
