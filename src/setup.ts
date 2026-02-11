@@ -58,7 +58,10 @@ interface ServiceAccountKey {
 function validateKeyFile(path: string): ServiceAccountKey | null {
     try {
         const sanitizedPath = path.trim().replace(/\0/g, '');
-        const fullPath = resolve(sanitizedPath.replace('~', homedir()));
+        const expandedPath = sanitizedPath.startsWith('~')
+            ? sanitizedPath.replace('~', homedir())
+            : sanitizedPath;
+        const fullPath = resolve(expandedPath);
 
         if (!existsSync(fullPath)) {
             printError(`File not found: ${fullPath}`);
@@ -266,11 +269,12 @@ async function main() {
         try {
             const repo = resolveRepo(__dirname);
 
-            if (repo && repo.includes('/')) {
+            // Harden against command injection: ensure repo is in 'owner/repo' format
+            if (repo && /^[a-zA-Z0-9_.-]+\/[a-zA-Z0-9_.-]+$/.test(repo)) {
                 execSync(`gh api -X PUT /user/starred/${repo}`, { stdio: 'ignore' });
                 printSuccess('Thanks for your support! ⭐');
             } else {
-                throw new Error('Could not resolve repo');
+                throw new Error('Invalid repository format');
             }
         } catch (error) {
             console.log('\nCould not star automatically. Please star us manually if you like:');

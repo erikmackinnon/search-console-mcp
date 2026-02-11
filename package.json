@@ -35,10 +35,12 @@
     "cheerio": "^1.2.0",
     "dotenv": "^17.2.3",
     "googleapis": "^171.0.0",
+    "re2": "^1.23.3",
     "zod": "^4.3.6"
   },
   "devDependencies": {
     "@types/node": "^25.2.0",
+    "@types/re2": "^1.10.0",
     "@vitest/coverage-v8": "^4.0.18",
     "typedoc": "^0.28.16",
     "typescript": "^5.9.3",

@@ -1,4 +1,6 @@
 import { queryAnalytics } from './analytics.js';
+import { safeTestBatch } from '../utils/regex.js';
+
 
 /**
  * Insight: A single SEO recommendation or finding
@@ -529,21 +531,21 @@ export async function analyzeBrandVsNonBrand(
         limit: 10000
     });
 
-    const brandRegex = new RegExp(brandRegexString, 'i');
+    const queries = rows.map(row => row.keys?.[0] ?? '');
+    const isBrandResults = safeTestBatch(brandRegexString, 'i', queries);
 
     const brandStats = { clicks: 0, impressions: 0, ctr: 0, position: 0, queryCount: 0, weightedPos: 0 };
     const nonBrandStats = { clicks: 0, impressions: 0, ctr: 0, position: 0, queryCount: 0, weightedPos: 0 };
 
-    for (const row of rows) {
-        const query = row.keys?.[0] ?? '';
-        const isBrand = brandRegex.test(query);
+    rows.forEach((row, index) => {
+        const isBrand = isBrandResults[index];
         const stats = isBrand ? brandStats : nonBrandStats;
 
         stats.clicks += row.clicks ?? 0;
         stats.impressions += row.impressions ?? 0;
         stats.weightedPos += (row.position ?? 0) * (row.impressions ?? 0);
         stats.queryCount++;
-    }
+    });
 
     const calc = (stats: typeof brandStats, segment: 'Brand' | 'Non-Brand'): BrandVsNonBrandMetrics => ({
         segment,

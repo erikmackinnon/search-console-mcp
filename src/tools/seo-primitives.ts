@@ -1,3 +1,4 @@
+import { safeTest } from '../utils/regex.js';
 
 /**
  * SEO Primitives: Atomic functions for building higher-level SEO agents.
@@ -116,18 +117,12 @@ export function calculateTrafficDelta(current: number, previous: number): Traffi
  * @returns A brand detection result.
  */
 export function isBrandQuery(query: string, brandRegexString: string): BrandQueryResult {
-    try {
-        const regex = new RegExp(brandRegexString, 'i');
-        const isBrand = regex.test(query);
-        return {
-            query,
-            isBrand,
-            matchedPattern: isBrand ? brandRegexString : undefined
-        };
-    } catch (e) {
-        // Invalid regex fallback
-        return { query, isBrand: false };
-    }
+    const isBrand = safeTest(brandRegexString, 'i', query);
+    return {
+        query,
+        isBrand,
+        matchedPattern: isBrand ? brandRegexString : undefined
+    };
 }
 
 /**
