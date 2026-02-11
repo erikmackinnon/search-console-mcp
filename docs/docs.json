@@ -59,3 +59,23 @@
       },
       {
         "group": "Prompts",
+        "pages": [
+          "prompts/claude",
+          "prompts/cursor",
+          "prompts/generic-agents"
+        ]
+      },
+      {
+        "group": "Contributing",
+        "pages": [
+          "contributing/philosophy",
+          "contributing/adding-tools",
+          "contributing/testing"
+        ]
+      }
+    ]
+  },
+  "footerSocials": {
+    "github": "https://github.com/saurabhsharma2u/search-console-mcp"
+  }
+}
