@@ -18,6 +18,11 @@
         }
     ],
     "navigation": {
+        {
+      "group": "Getting Started",
+      "pages": ["index"]
+    },
+      "home": "index",
         "pages": [
             "index",
             {
