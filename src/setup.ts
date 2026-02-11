@@ -1,8 +1,13 @@
 #!/usr/bin/env node
-import { readFileSync, existsSync } from 'fs';
-import { resolve } from 'path';
+import { readFileSync, existsSync, statSync } from 'fs';
+import { resolve, dirname, extname } from 'path';
 import { createInterface } from 'readline';
 import { homedir } from 'os';
+import { fileURLToPath } from 'url';
+import { execSync } from 'child_process';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 const rl = createInterface({
     input: process.stdin,
@@ -52,10 +57,27 @@ interface ServiceAccountKey {
 
 function validateKeyFile(path: string): ServiceAccountKey | null {
     try {
-        const fullPath = resolve(path.replace('~', homedir()));
+        const sanitizedPath = path.trim().replace(/\0/g, '');
+        const fullPath = resolve(sanitizedPath.replace('~', homedir()));
 
         if (!existsSync(fullPath)) {
             printError(`File not found: ${fullPath}`);
+            return null;
+        }
+
+        const stats = statSync(fullPath);
+        if (!stats.isFile()) {
+            printError(`Not a regular file: ${fullPath}`);
+            return null;
+        }
+
+        if (extname(fullPath).toLowerCase() !== '.json') {
+            printError(`Invalid file type. Please provide a .json file.`);
+            return null;
+        }
+
+        if (stats.size > 1024 * 1024) {
+            printError(`File too large. Service account keys are typically small JSON files.`);
             return null;
         }
 
@@ -128,6 +150,29 @@ function showConfigSnippets(credentialsPath: string) {
         }
     }, null, 2));
     console.log('─'.repeat(60));
+}
+
+export function resolveRepo(dirname: string): string {
+    let repo = '';
+    try {
+        const url = execSync('git remote get-url origin', { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim();
+        repo = url
+            .replace(/^git@github\.com:|^https:\/\/github\.com\//, '')
+            .replace(/\.git$/, '');
+    } catch {
+        // Fallback to package.json
+        const pkgPath = resolve(dirname, '../package.json');
+        if (existsSync(pkgPath)) {
+            const pkg = JSON.parse(readFileSync(pkgPath, 'utf8'));
+            if (pkg.repository?.url) {
+                repo = pkg.repository.url.replace(/.*github\.com\//, '').replace(/\.git$/, '');
+            } else if (pkg.mcpName && pkg.mcpName.includes('/')) {
+                // Handle io.github.owner/repo or owner/repo
+                repo = pkg.mcpName.replace(/^io\.github\./, '').split('/').slice(-2).join('/');
+            }
+        }
+    }
+    return repo;
 }
 
 async function main() {
@@ -219,11 +264,17 @@ async function main() {
     const answer = await ask('Would you like to star the repo on GitHub? (y/n): ');
     if (answer.toLowerCase().startsWith('y')) {
         try {
-            const { execSync } = await import('child_process');
-            execSync('gh repo star saurabhsharma2u/search-console-mcp', { stdio: 'inherit' });
-            printSuccess('Thanks for your support! ⭐');
+            const repo = resolveRepo(__dirname);
+
+            if (repo && repo.includes('/')) {
+                execSync(`gh api -X PUT /user/starred/${repo}`, { stdio: 'ignore' });
+                printSuccess('Thanks for your support! ⭐');
+            } else {
+                throw new Error('Could not resolve repo');
+            }
         } catch (error) {
-            console.log('Please star us manually at: https://github.com/saurabhsharma2u/search-console-mcp');
+            console.log('\nCould not star automatically. Please star us manually if you like:');
+            console.log('🔗 https://github.com/saurabhsharma2u/search-console-mcp');
         }
     } else {
         console.log('No problem! Enjoy using Search Console MCP.');
@@ -233,7 +284,10 @@ async function main() {
 }
 
 // Run if called directly
-main().catch((error) => {
-    console.error('Setup failed:', error);
-    process.exit(1);
-});
+const isMain = process.argv[1] && fileURLToPath(import.meta.url) === resolve(process.argv[1]);
+if (isMain) {
+    main().catch((error) => {
+        console.error('Setup failed:', error);
+        process.exit(1);
+    });
+}

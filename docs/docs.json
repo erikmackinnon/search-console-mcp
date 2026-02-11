@@ -1,0 +1,80 @@
+{
+    "name": "Search Console MCP",
+    "theme": "mint",
+    "logo": {
+        "light": "/logo/light.svg",
+        "dark": "/logo/dark.svg"
+    },
+    "favicon": "/favicon.png",
+    "colors": {
+        "primary": "#4F46E5",
+        "light": "#818CF8",
+        "dark": "#312E81"
+    },
+    "topbarLinks": [
+        {
+            "name": "GitHub",
+            "url": "https://github.com/saurabhsharma2u/search-console-mcp"
+        }
+    ],
+    "navigation": {
+        "pages": [
+            "index",
+            {
+                "group": "Getting Started",
+                "pages": [
+                    "getting-started/overview",
+                    "getting-started/installation",
+                    "getting-started/authentication",
+                    "getting-started/first-queries"
+                ]
+            },
+            {
+                "group": "Concepts",
+                "pages": [
+                    "concepts/mcp-and-seo",
+                    "concepts/architecture",
+                    "concepts/data-vs-intelligence",
+                    "concepts/trust-and-security"
+                ]
+            },
+            {
+                "group": "Tools",
+                "pages": [
+                    "tools/analytics",
+                    "tools/seo-intelligence",
+                    "tools/inspection",
+                    "tools/sites-and-sitemaps"
+                ]
+            },
+            {
+                "group": "Workflows",
+                "pages": [
+                    "workflows/investigate-traffic-drop",
+                    "workflows/find-quick-wins",
+                    "workflows/detect-cannibalization",
+                    "workflows/weekly-seo-review"
+                ]
+            },
+            {
+                "group": "Prompts",
+                "pages": [
+                    "prompts/claude",
+                    "prompts/cursor",
+                    "prompts/generic-agents"
+                ]
+            },
+            {
+                "group": "Contributing",
+                "pages": [
+                    "contributing/philosophy",
+                    "contributing/adding-tools",
+                    "contributing/testing"
+                ]
+            }
+        ]
+    },
+    "footerSocials": {
+        "github": "https://github.com/saurabhsharma2u/search-console-mcp"
+    }
+}

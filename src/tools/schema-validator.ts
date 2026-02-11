@@ -2,12 +2,25 @@
 import Validator from '@adobe/structured-data-validator';
 import * as cheerio from 'cheerio';
 
-interface ValidationResult {
+/**
+ * Result of a structured data (schema) validation check.
+ */
+export interface ValidationResult {
+    /** Whether all schemas were found and valid. */
     valid: boolean;
+    /** A list of validation errors found across all detected schemas. */
     errors: any[];
+    /** The original JSON-LD schemas extracted from the input. */
     schemas: any[];
 }
 
+/**
+ * Validates structured data (JSON-LD) from a URL, raw HTML, or a JSON string.
+ *
+ * @param input - The source to validate (URL, HTML string, or JSON string).
+ * @param type - The type of input being provided.
+ * @returns A result object indicating validity and listing any errors found.
+ */
 export async function validateSchema(
     input: string,
     type: 'url' | 'html' | 'json'
@@ -42,21 +55,25 @@ export async function validateSchema(
             return { valid: false, errors: ["No structured data (JSON-LD) found"], schemas: [] };
         }
 
-        const validator = new Validator();
-        for (const schema of schemas) {
+        const validationPromises = schemas.map(async (schema) => {
+            const validator = new Validator();
             try {
                 const result = await validator.validate(schema);
                 if (result && Array.isArray(result) && result.length > 0) {
                     // result is array of errors
-                    errors.push(...result.map((err: any) => ({
+                    return result.map((err: any) => ({
                         ...err,
                         schemaType: schema['@type'] || 'Unknown'
-                    })));
+                    }));
                 }
+                return [];
             } catch (e: any) {
-                errors.push({ message: `Validation exception: ${e.message}`, schemaType: schema['@type'] || 'Unknown' });
+                return [{ message: `Validation exception: ${e.message}`, schemaType: schema['@type'] || 'Unknown' }];
             }
-        }
+        });
+
+        const results = await Promise.all(validationPromises);
+        errors.push(...results.flat());
 
         return {
             valid: errors.length === 0,

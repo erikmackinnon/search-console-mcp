@@ -1,6 +1,6 @@
 {
   "name": "search-console-mcp",
-  "version": "1.9.1",
+  "version": "1.9.2",
   "mcpName": "io.github.saurabhsharma2u/search-console-mcp",
   "description": "MCP server for Google Search Console API",
   "type": "module",
@@ -17,6 +17,7 @@
   "scripts": {
     "build": "tsc",
     "test": "vitest run",
+    "docs": "typedoc",
     "deploy:registry": "mcp-publisher publish",
     "prepublishOnly": "npm run build"
   },
@@ -30,7 +31,7 @@
   "license": "MIT",
   "dependencies": {
     "@adobe/structured-data-validator": "^1.6.0",
-    "@modelcontextprotocol/sdk": "^1.25.3",
+    "@modelcontextprotocol/sdk": "^1.26.0",
     "cheerio": "^1.2.0",
     "dotenv": "^17.2.3",
     "googleapis": "^171.0.0",
@@ -39,6 +40,7 @@
   "devDependencies": {
     "@types/node": "^25.2.0",
     "@vitest/coverage-v8": "^4.0.18",
+    "typedoc": "^0.28.16",
     "typescript": "^5.9.3",
     "vitest": "^4.0.18"
   }
