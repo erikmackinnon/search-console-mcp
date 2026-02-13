@@ -1,10 +1,12 @@
 #!/usr/bin/env node
-import { readFileSync, existsSync, statSync } from 'fs';
-import { resolve, dirname, extname } from 'path';
+import 'dotenv/config';
+import { readFileSync, existsSync, statSync, writeFileSync } from 'fs';
+import { resolve, dirname, extname, join } from 'path';
 import { createInterface } from 'readline';
 import { homedir } from 'os';
 import { fileURLToPath } from 'url';
 import { execSync } from 'child_process';
+import { startLocalFlow, saveTokens, getUserEmail, logout, DEFAULT_CLIENT_ID, DEFAULT_CLIENT_SECRET } from './google-client.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -55,7 +57,7 @@ interface ServiceAccountKey {
     token_uri: string;
 }
 
-function validateKeyFile(path: string): ServiceAccountKey | null {
+export function validateKeyFile(path: string): ServiceAccountKey | null {
     try {
         const sanitizedPath = path.trim().replace(/\0/g, '');
         const expandedPath = sanitizedPath.startsWith('~')
@@ -76,11 +78,6 @@ function validateKeyFile(path: string): ServiceAccountKey | null {
 
         if (extname(fullPath).toLowerCase() !== '.json') {
             printError(`Invalid file type. Please provide a .json file.`);
-            return null;
-        }
-
-        if (stats.size > 1024 * 1024) {
-            printError(`File too large. Service account keys are typically small JSON files.`);
             return null;
         }
 
@@ -107,7 +104,7 @@ function validateKeyFile(path: string): ServiceAccountKey | null {
     }
 }
 
-async function testConnection(keyPath: string): Promise<boolean> {
+export async function testConnection(keyPath: string): Promise<boolean> {
     try {
         process.env.GOOGLE_APPLICATION_CREDENTIALS = resolve(keyPath.replace('~', homedir()));
         const { google } = await import('googleapis');
@@ -122,37 +119,19 @@ async function testConnection(keyPath: string): Promise<boolean> {
     }
 }
 
-function showConfigSnippets(credentialsPath: string) {
+export function showConfigSnippets(credentialsPath: string) {
     console.log('\nAdd this to your MCP client configuration:\n');
-    console.log('For Claude Desktop (~/.config/claude/claude_desktop_config.json):');
-    console.log('─'.repeat(60));
     console.log(JSON.stringify({
         mcpServers: {
             "search-console": {
                 command: "npx",
-                args: ["search-console-mcp"],
+                args: ["-y", "search-console-mcp"],
                 env: {
                     GOOGLE_APPLICATION_CREDENTIALS: credentialsPath
                 }
             }
         }
     }, null, 2));
-    console.log('─'.repeat(60));
-
-    console.log('\nFor VS Code Copilot (.vscode/mcp.json):');
-    console.log('─'.repeat(60));
-    console.log(JSON.stringify({
-        servers: {
-            "search-console": {
-                command: "npx",
-                args: ["search-console-mcp"],
-                env: {
-                    GOOGLE_APPLICATION_CREDENTIALS: credentialsPath
-                }
-            }
-        }
-    }, null, 2));
-    console.log('─'.repeat(60));
 }
 
 export function resolveRepo(dirname: string): string {
@@ -170,7 +149,6 @@ export function resolveRepo(dirname: string): string {
             if (pkg.repository?.url) {
                 repo = pkg.repository.url.replace(/.*github\.com\//, '').replace(/\.git$/, '');
             } else if (pkg.mcpName && pkg.mcpName.includes('/')) {
-                // Handle io.github.owner/repo or owner/repo
                 repo = pkg.mcpName.replace(/^io\.github\./, '').split('/').slice(-2).join('/');
             }
         }
@@ -178,13 +156,76 @@ export function resolveRepo(dirname: string): string {
     return repo;
 }
 
-export async function main() {
+export async function login() {
     printHeader();
+    printStep(1, 'Browser Authorization');
 
-    console.log('This wizard will help you set up Search Console MCP.');
-    console.log('You will need a Google Cloud service account with Search Console access.\n');
+    console.log('Using Secure Desktop Flow.');
+    console.log('Note: We will automatically fetch your email to support multiple accounts.');
 
-    // Step 1: Check for existing credentials
+    // Use centralized defaults
+    const clientId = DEFAULT_CLIENT_ID;
+    const clientSecret = DEFAULT_CLIENT_SECRET;
+
+    try {
+        const tokens = await startLocalFlow(clientId, clientSecret);
+
+        printInfo('Fetching account information...');
+        const email = await getUserEmail(tokens);
+
+        await saveTokens(tokens, email);
+        printSuccess(`Successfully authenticated as ${email}!`);
+        printInfo('Tokens are stored securely in your system keychain.');
+
+        printStep(2, 'Configure your MCP client');
+        showOAuth2ConfigSnippets(clientId, clientSecret);
+
+        await supportProject();
+        rl.close();
+    } catch (error) {
+        printError(`Authentication failed: ${(error as Error).message}`);
+        console.log('\nTip: Ensure you are using a "Desktop Application" Client ID type in the Cloud Console.');
+        process.exit(1);
+    }
+}
+
+export async function runLogout() {
+    printHeader();
+    printInfo('Logging out and clearing secure credentials...');
+
+    // Get email from CLI args if provided: search-console-mcp logout user@gmail.com
+    const email = process.argv[3];
+
+    try {
+        await logout(email);
+        if (email) {
+            printSuccess(`Successfully logged out and removed credentials for ${email}.`);
+        } else {
+            printSuccess('Successfully logged out from default account.');
+        }
+    } catch (error) {
+        printError(`Logout failed: ${(error as Error).message}`);
+    }
+    rl.close();
+}
+
+function showOAuth2ConfigSnippets(clientId: string, clientSecret: string) {
+    console.log('\nAdd this to your MCP client configuration:\n');
+    console.log(JSON.stringify({
+        mcpServers: {
+            "search-console": {
+                command: "npx",
+                args: ["-y", "search-console-mcp"],
+                env: {
+                    GOOGLE_CLIENT_ID: clientId,
+                    GOOGLE_CLIENT_SECRET: clientSecret
+                }
+            }
+        }
+    }, null, 2));
+}
+
+async function setupServiceAccount() {
     printStep(1, 'Locate your service account JSON key file');
 
     console.log('If you don\'t have one yet, follow these steps:');
@@ -193,101 +234,90 @@ export async function main() {
     console.log('  3. Click "Keys" > "Add Key" > "Create new key" > "JSON"');
     console.log('  4. Save the downloaded JSON file\n');
 
-    const keyPath = await ask('Enter the path to your JSON key file (or press Enter to see config examples): ');
+    const keyPath = await ask('Enter the path to your JSON key file: ');
 
-    // Default values for when no path provided
-    let serviceAccountEmail = '<your-service-account>@<project>.iam.gserviceaccount.com';
-    let credentialsPath = '/path/to/your/service-account-key.json';
-
-    if (keyPath) {
-        // Validate the key file
-        const key = validateKeyFile(keyPath);
-        if (!key) {
-            rl.close();
-            process.exit(1);
-        }
-
-        printSuccess('JSON key file is valid!');
-        printInfo(`Project: ${key.project_id}`);
-        printInfo(`Service Account: ${key.client_email}`);
-        serviceAccountEmail = key.client_email;
-        credentialsPath = resolve(keyPath.replace('~', homedir()));
-
-        // Step 2: Show service account email
-        printStep(2, 'Add service account to Google Search Console');
-
-        console.log('You need to add this email as a user in Google Search Console:\n');
-        console.log(`  📧 ${serviceAccountEmail}\n`);
-        console.log('Steps:');
-        console.log('  1. Go to https://search.google.com/search-console');
-        console.log('  2. Select your property (or add one if needed)');
-        console.log('  3. Click "Settings" (gear icon) in the sidebar');
-        console.log('  4. Click "Users and permissions"');
-        console.log('  5. Click "Add user"');
-        console.log(`  6. Enter: ${serviceAccountEmail}`);
-        console.log('  7. Set permission to "Full" (or "Restricted" for read-only)');
-        console.log('  8. Click "Add"\n');
-
-        await ask('Press Enter when you\'ve added the service account to Search Console...');
-
-        // Step 3: Test connection
-        printStep(3, 'Test connection');
-
-        console.log('Testing authentication with Google APIs...');
-        const connected = await testConnection(keyPath);
-
-        if (connected) {
-            printSuccess('Authentication successful!');
-        } else {
-            printError('Authentication failed. Please check your credentials and try again.');
-            rl.close();
-            process.exit(1);
-        }
-
-        // Step 4: Show configuration
-        printStep(4, 'Configure your MCP client');
-        showConfigSnippets(credentialsPath);
-        console.log('\n🎉 Setup complete! You can now use Search Console MCP.\n');
-
-    } else {
-        // No path provided - just show config examples
-        printInfo('No credentials file provided. Showing example configuration...\n');
-
-        printStep(2, 'Add service account to Google Search Console');
-        console.log('After creating your service account, add this email to Search Console:');
-        console.log(`  📧 ${serviceAccountEmail}\n`);
-
-        printStep(3, 'Configure your MCP client');
-        showConfigSnippets(credentialsPath);
-        console.log('\n💡 Run this wizard again with your JSON file path for validation.\n');
+    if (!keyPath) {
+        printError('No credentials file provided.');
+        process.exit(1);
     }
 
-    // Step 5: Support the project
-    printStep(5, 'Support this project');
-    const answer = await ask('Would you like to star the repo on GitHub? (Y/n): ');
+    const key = validateKeyFile(keyPath);
+    if (!key) {
+        process.exit(1);
+    }
+
+    printSuccess('JSON key file is valid!');
+    const serviceAccountEmail = key.client_email;
+    const credentialsPath = resolve(keyPath.replace('~', homedir()));
+
+    printStep(2, 'Add service account to Google Search Console');
+    console.log('You need to add this email as a user in Google Search Console:\n');
+    console.log(`  📧 ${serviceAccountEmail}\n`);
+    console.log('Steps:');
+    console.log('  1. Go to https://search.google.com/search-console');
+    console.log('  2. Select your property');
+    console.log('  3. Click "Settings" > "Users and permissions" > "Add user"');
+    console.log(`  4. Enter: ${serviceAccountEmail}`);
+    console.log('  5. Set permission to "Full" or "Restricted" and click "Add"\n');
+
+    await ask('Press Enter when you\'ve added the service account to Search Console...');
+
+    printStep(3, 'Test connection');
+    console.log('Testing authentication with Google APIs...');
+    const connected = await testConnection(credentialsPath);
+
+    if (connected) {
+        printSuccess('Authentication successful!');
+    } else {
+        process.exit(1);
+    }
+
+    printStep(4, 'Configure your MCP client');
+    showConfigSnippets(credentialsPath);
+    console.log('\n🎉 Setup complete! You can now use Search Console MCP.\n');
+
+    await supportProject();
+    rl.close();
+}
+
+async function supportProject() {
+    const answer = await ask('\nWould you like to star the repo on GitHub? (Y/n): ');
     if (answer === '' || answer.toLowerCase().startsWith('y')) {
         try {
             const repo = resolveRepo(__dirname);
-
-            // Harden against command injection: ensure repo is in 'owner/repo' format
             if (repo && /^[a-zA-Z0-9_.-]+\/[a-zA-Z0-9_.-]+$/.test(repo)) {
                 execSync(`gh api -X PUT /user/starred/${repo}`, { stdio: 'ignore' });
                 printSuccess('Thanks for your support! ⭐');
             } else {
-                throw new Error('Invalid repository format');
+                console.log('🔗 https://github.com/saurabhsharma2u/search-console-mcp');
             }
         } catch (error) {
-            console.log('\nCould not star automatically. Please star us manually if you like:');
             console.log('🔗 https://github.com/saurabhsharma2u/search-console-mcp');
         }
-    } else {
-        console.log('No problem! Enjoy using Search Console MCP.');
     }
-
-    rl.close();
 }
 
-// Run if called directly
+export async function main() {
+    printHeader();
+    console.log('Choose your authentication method:');
+
+    console.log('\n1. OAuth 2.0 Desktop Flow (Recommended)');
+    console.log('   - Pros: Automatic authorization, uses your direct Google Account.');
+    console.log('   - Requirement: Opens a browser window and starts a brief local server.');
+
+    console.log('\n2. Service Account (Advanced)');
+    console.log('   - Pros: Fixed credentials, ideal for server environments and automated tasks.');
+    console.log('   - Cons: Requires creating a Google Cloud Project and manual Search Console sharing.');
+
+    const choice = await ask('\nEnter your choice (1 or 2, default is 1): ');
+
+    if (choice === '2') {
+        await setupServiceAccount();
+    } else {
+        await login();
+    }
+}
+
 const isMain = process.argv[1] && fileURLToPath(import.meta.url) === resolve(process.argv[1]);
 if (isMain) {
     main().catch((error) => {

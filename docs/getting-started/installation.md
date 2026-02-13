@@ -1,45 +1,30 @@
 ---
 title: "Installation"
-description: "How to set up the Search Console MCP server."
+description: "Get up and running in less than 2 minutes."
 ---
 
-Setting up `search-console-mcp` is straightforward. You can run it directly using `npx` or install it globally.
+We designed `search-console-mcp` to work instantly with your favorite AI editor. No complex configuration required.
 
 ## Prerequisites
 
-1.  **Node.js 18 or higher.**
-2.  **Google Cloud Service Account:** You need a JSON key file for a service account that has access to your Search Console properties. (See [Authentication](/getting-started/authentication) for details).
+1.  **Node.js 18 or higher**
+2.  **A verified Google Search Console property**
 
-## Quick Start (npx)
+## 🚀 One-Line Setup
 
-The easiest way to get started is by using our built-in setup wizard:
-
-```bash
-npx -y search-console-mcp setup
-```
-
-This wizard will help you:
-*   Configure your Service Account key path.
-*   Validate your credentials.
-*   Generate the configuration snippet for Claude Desktop or Cursor.
-
-## Manual Configuration
-
-If you prefer to configure your client manually, you can run the server via `npx`:
+Run this command in your terminal. It will authenticate you with Google and generate the configuration you need.
 
 ```bash
-npx search-console-mcp
+npx search-console-mcp setup
 ```
 
-### Environment Variables
+The tool will open your browser for secure authentication and then display the exact code snippet to copy-paste into your config.
 
-The server looks for the following environment variables:
-
-| Variable | Description |
-| :--- | :--- |
-| `GOOGLE_APPLICATION_CREDENTIALS` | Absolute path to your Google Service Account JSON key file. |
+---
 
 ## Client Configuration
+
+If you prefer to set it up manually, here are the instructions for the most popular clients.
 
 ### Claude Desktop
 
@@ -50,20 +35,50 @@ Add this to your `claude_desktop_config.json`:
   "mcpServers": {
     "search-console": {
       "command": "npx",
-      "args": ["-y", "search-console-mcp"],
-      "env": {
-        "GOOGLE_APPLICATION_CREDENTIALS": "/path/to/your/service-account-key.json"
-      }
+      "args": ["-y", "search-console-mcp"]
     }
   }
 }
 ```
 
+*That's it! No environment variables needed if you ran the setup command.*
+
 ### Cursor
 
-1.  Open **Cursor Settings**.
+1.  Open **Cursor Settings** (Cmd + ,).
 2.  Navigate to **Features** > **MCP**.
 3.  Click **+ Add New MCP Server**.
-4.  **Name:** `Search Console`
-5.  **Type:** `command`
-6.  **Command:** `GOOGLE_APPLICATION_CREDENTIALS=/path/to/key.json npx -y search-console-mcp`
+4.  Enter the following:
+    *   **Name:** `Search Console`
+    *   **Type:** `command`
+    *   **Command:** `npx -y search-console-mcp`
+
+<Tip>
+  If you see an error about "command not found," try using the full path to your node executable or `npm` prefix.
+</Tip>
+
+### VS Code
+
+You can configure the server specifically for your workspace using the standard MCP extension.
+
+1.  **Option A: Config File**
+    Create a file named `.vscode/mcp.json` and add:
+
+    ```json
+    {
+        "servers": {
+            "search-console": {
+                "command": "npx",
+                "args": [
+                    "-y",
+                    "search-console-mcp"
+                ]
+            }
+        }
+    }
+    ```
+
+2.  **Option B: Command Palette**
+    *   Open the Command Palette (`Cmd+Shift+P` / `Ctrl+Shift+P`).
+    *   Search for **"MCP: Add Server"**.
+    *   Enter the command: `npx -y search-console-mcp`.

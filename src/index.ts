@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import 'dotenv/config';
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
@@ -13,6 +14,9 @@ import * as schemaValidator from "./tools/schema-validator.js";
 import * as advancedAnalytics from "./tools/advanced-analytics.js";
 import * as sitesHealth from "./tools/sites-health.js";
 import { formatError } from "./errors.js";
+import { existsSync } from "fs";
+import { join } from "path";
+import { homedir } from "os";
 
 const server = new McpServer({
   name: "search-console-mcp",
@@ -1051,23 +1055,43 @@ End with an overall portfolio summary and the single most important action to ta
 );
 
 async function main() {
-  // Allow `npx search-console-mcp setup` to launch the setup wizard
-  if (process.argv[2] === 'setup') {
+  const command = process.argv[2];
+
+  // Handle standalone commands
+  if (command === 'setup') {
     const { main: setupMain } = await import('./setup.js');
     await setupMain();
     return;
   }
 
-  if (!process.env.GOOGLE_APPLICATION_CREDENTIALS) {
+  if (command === 'logout') {
+    const { runLogout } = await import('./setup.js');
+    await runLogout();
+    return;
+  }
+
+  if (command === 'login') {
+    const { login } = await import('./setup.js');
+    await login();
+    return;
+  }
+
+  // Check for credentials
+  const hasServiceAccount = !!process.env.GOOGLE_APPLICATION_CREDENTIALS || (!!process.env.GOOGLE_CLIENT_EMAIL && !!process.env.GOOGLE_PRIVATE_KEY);
+  const tokenPath = join(homedir(), '.search-console-mcp-tokens.enc');
+  const hasOAuthTokens = existsSync(tokenPath);
+
+  if (!hasServiceAccount && !hasOAuthTokens) {
     console.error('\n╔══════════════════════════════════════════════════════════════╗');
     console.error('║          🚀 Google Search Console MCP Server                 ║');
     console.error('╚══════════════════════════════════════════════════════════════╝\n');
-    console.error('❌ GOOGLE_APPLICATION_CREDENTIALS environment variable is not set.\n');
-    console.error('💡 To set up the server, run the setup wizard:');
+    console.error('❌ No authentication found.\n');
+    console.error('💡 Please authorize with your Google Account:');
+    console.error('   npx -y search-console-mcp login\n');
+    console.error('Alternatively, run the setup wizard for other options:');
     console.error('   npx -y search-console-mcp setup\n');
-    console.error('Alternatively, set the variable manually:');
-    console.error('   export GOOGLE_APPLICATION_CREDENTIALS=/path/to/your/key.json\n');
     console.error('─'.repeat(64) + '\n');
+    // We don't exit here because the transport might still be needed or the user might be piping output
   }
 
   const transport = new StdioServerTransport();
