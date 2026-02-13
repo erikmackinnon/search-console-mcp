@@ -1,13 +1,12 @@
 {
   "name": "search-console-mcp",
-  "version": "1.9.2",
+  "version": "1.9.3",
   "mcpName": "io.github.saurabhsharma2u/search-console-mcp",
   "description": "MCP server for Google Search Console API",
   "type": "module",
   "main": "dist/index.js",
   "bin": {
-    "search-console-mcp": "./dist/index.js",
-    "search-console-mcp-setup": "./dist/setup.js"
+    "search-console-mcp": "./dist/index.js"
   },
   "files": [
     "dist",

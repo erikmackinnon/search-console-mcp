@@ -27,6 +27,17 @@ My traffic for https://example.com has dropped recently.
 4. Act as a senior SEO consultant and attribute this drop to a specific cause (e.g., technical, algorithm, or seasonality).
 ```
 
+## The "Site Health Check" Prompt
+Use this to get an instant diagnostics overview.
+
+```markdown
+Run a health check across all my verified sites.
+1. Use the site health check tool to get the status of each property.
+2. For any site with "critical" or "warning" status, investigate the root cause.
+3. If there was a traffic drop, check if it correlates with a known Google algorithm update.
+4. Provide a prioritized action plan for the most affected sites.
+```
+
 ## Why these work well
 *   **Chained Tool Use:** These prompts encourage Claude to use multiple tools in sequence before answering.
 *   **Role Prompting:** By asking Claude to "Act as a senior SEO consultant," you improve the quality of the qualitative reasoning it adds to the quantitative data.

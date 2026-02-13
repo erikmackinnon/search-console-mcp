@@ -87,7 +87,7 @@ We take your data security seriously. This tool is designed to be **local-first*
 First, use the interactive wizard to validate your credentials and get your configuration:
 
 ```bash
-npx search-console-mcp-setup
+npx -y search-console-mcp setup
 ```
 
 The wizard will guide you through:
@@ -155,6 +155,7 @@ These are low-level tools designed to be used by other AI agents to build comple
 |------|-------------|
 | `sites_list` | List all verified sites. |
 | `sites_add` / `sites_delete` | Manage properties. |
+| `sites_health_check` | **[NEW]** Run a health check on one or all sites. Checks WoW performance, sitemaps, and anomalies. |
 | `sitemaps_list` / `sitemaps_submit` | Manage sitemaps. |
 
 ### Inspection & Validation

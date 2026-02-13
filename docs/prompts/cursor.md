@@ -23,6 +23,15 @@ Compare the queries discovered with the current <title> and <meta description> t
 Suggest improved, keyword-optimized titles that are likely to increase my CTR.
 ```
 
+## The "Health Check Dashboard" Prompt
+Use this to monitor all your sites from your IDE.
+
+```markdown
+Run a health check for https://example.com using the search-console MCP.
+Show me the overall status, week-over-week performance changes, and any sitemap errors.
+If there are issues, cross-reference with my local code to see if a recent deploy could have caused them.
+```
+
 ## Why these work well
 *   **Contextual Awareness:** Cursor knows your code. By using the MCP, it also knows your *results*. This bridge allows it to make code suggestions based on search performance.
 *   **Zero-Context Switching:** You don't have to leave your editor to know that your recent deploy slowed down your most important landing page.
