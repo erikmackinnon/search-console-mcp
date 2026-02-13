@@ -45,15 +45,15 @@ describe('Advanced Analytics V2 (Attribution & Time Series)', () => {
         });
 
         it('should detect a known algorithm update', async () => {
-            const rows = Array(20).fill({ keys: ['2025-01-XX'], clicks: 100 });
-            rows.push({ keys: ['2025-01-15'], clicks: 20 }); // Jan 2025 Core Update date
+            const rows = Array(20).fill({ keys: ['2025-03-XX'], clicks: 100 });
+            rows.push({ keys: ['2025-03-13'], clicks: 20 }); // March 2025 Core Update date
 
             mockSearchConsoleClient.searchanalytics.query
                 .mockResolvedValueOnce({ data: { rows } })
                 .mockResolvedValue({ data: { rows: [] } });
 
             const result = await analyzeDropAttribution('https://example.com');
-            expect(result?.possibleAlgorithmUpdate).toBe('January 2025 Core Update');
+            expect(result?.possibleAlgorithmUpdate).toBe('March 2025 Core Update');
         });
     });
 

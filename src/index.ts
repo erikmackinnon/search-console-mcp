@@ -11,6 +11,7 @@ import * as seoInsights from "./tools/seo-insights.js";
 import * as seoPrimitives from "./tools/seo-primitives.js";
 import * as schemaValidator from "./tools/schema-validator.js";
 import * as advancedAnalytics from "./tools/advanced-analytics.js";
+import * as sitesHealth from "./tools/sites-health.js";
 import { formatError } from "./errors.js";
 
 const server = new McpServer({
@@ -74,6 +75,24 @@ server.tool(
   async ({ siteUrl }) => {
     try {
       const result = await sites.getSite(siteUrl);
+      return {
+        content: [{ type: "text", text: JSON.stringify(result, null, 2) }]
+      };
+    } catch (error) {
+      return formatError(error);
+    }
+  }
+);
+
+server.tool(
+  "sites_health_check",
+  "Run a health check on one or all verified sites. Checks week-over-week performance, sitemap status, and traffic anomalies. Returns a structured report with an overall status (healthy/warning/critical) per site.",
+  {
+    siteUrl: z.string().optional().describe("Optional. The URL of a specific site to check. If omitted, checks all verified sites.")
+  },
+  async ({ siteUrl }) => {
+    try {
+      const result = await sitesHealth.healthCheck(siteUrl);
       return {
         content: [{ type: "text", text: JSON.stringify(result, null, 2) }]
       };
@@ -998,14 +1017,54 @@ Provide a summary with actionable recommendations.`
   })
 );
 
+server.prompt(
+  "site-health-check",
+  {
+    siteUrl: z.string().optional().describe("Optional. The URL of a specific site to check. If omitted, checks all verified sites.")
+  },
+  ({ siteUrl }) => ({
+    messages: [{
+      role: "user",
+      content: {
+        type: "text",
+        text: `Run a comprehensive health check${siteUrl ? ` for ${siteUrl}` : ' across all my verified sites'}.
+
+Use the 'sites_health_check' tool${siteUrl ? ` with siteUrl '${siteUrl}'` : ' without a siteUrl to check all sites'}.
+
+Then for each site in the results:
+
+1. **Summarize the status** (healthy / warning / critical) with a clear visual indicator.
+2. **Performance:** Report the week-over-week changes in clicks, impressions, CTR, and position.
+3. **Sitemaps:** Note any missing sitemaps, errors, or warnings.
+4. **Anomalies:** Highlight any traffic anomaly drops detected.
+
+If any site has a 'critical' or 'warning' status:
+- List the specific issues found.
+- For critical traffic drops, use 'analytics_drop_attribution' to check if a Google algorithm update is the likely cause.
+- For sitemap errors, use 'sitemaps_list' to get detailed error information.
+- Provide 3 prioritized action items for each affected site.
+
+End with an overall portfolio summary and the single most important action to take right now.`
+      }
+    }]
+  })
+);
+
 async function main() {
+  // Allow `npx search-console-mcp setup` to launch the setup wizard
+  if (process.argv[2] === 'setup') {
+    const { main: setupMain } = await import('./setup.js');
+    await setupMain();
+    return;
+  }
+
   if (!process.env.GOOGLE_APPLICATION_CREDENTIALS) {
     console.error('\n╔══════════════════════════════════════════════════════════════╗');
     console.error('║          🚀 Google Search Console MCP Server                 ║');
     console.error('╚══════════════════════════════════════════════════════════════╝\n');
     console.error('❌ GOOGLE_APPLICATION_CREDENTIALS environment variable is not set.\n');
     console.error('💡 To set up the server, run the setup wizard:');
-    console.error('   npx search-console-mcp-setup\n');
+    console.error('   npx -y search-console-mcp setup\n');
     console.error('Alternatively, set the variable manually:');
     console.error('   export GOOGLE_APPLICATION_CREDENTIALS=/path/to/your/key.json\n');
     console.error('─'.repeat(64) + '\n');

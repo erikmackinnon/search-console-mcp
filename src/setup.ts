@@ -178,7 +178,7 @@ export function resolveRepo(dirname: string): string {
     return repo;
 }
 
-async function main() {
+export async function main() {
     printHeader();
 
     console.log('This wizard will help you set up Search Console MCP.');
@@ -264,8 +264,8 @@ async function main() {
 
     // Step 5: Support the project
     printStep(5, 'Support this project');
-    const answer = await ask('Would you like to star the repo on GitHub? (y/n): ');
-    if (answer.toLowerCase().startsWith('y')) {
+    const answer = await ask('Would you like to star the repo on GitHub? (Y/n): ');
+    if (answer === '' || answer.toLowerCase().startsWith('y')) {
         try {
             const repo = resolveRepo(__dirname);
 
