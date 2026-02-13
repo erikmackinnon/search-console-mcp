@@ -16,7 +16,7 @@ const DEFAULT_ACCOUNT = 'default';
 
 // Default Client ID for Desktop Flow
 export const DEFAULT_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || '347626597503-dr6t24m0i3g1nl1suam86rs650t3fhau.apps.googleusercontent.com';
-export const DEFAULT_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET || ''; // Hardcoded secret removed for GitHub security compliance
+export const DEFAULT_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET || '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';
 
 const ENCRYPTION_ALGORITHM = 'aes-256-gcm';
 
