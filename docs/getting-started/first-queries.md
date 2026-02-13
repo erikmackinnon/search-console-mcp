@@ -35,6 +35,15 @@ This is where the power of the MCP shines. Instead of asking for data, ask for a
 
 The agent will use the `seo_quick_wins` tool, which performs a deterministic filter to identify the best opportunities.
 
+## Step 4: Run a Site Health Check
+
+Now try the health check tool to get an instant diagnostic across your properties.
+
+**User Prompt:**
+> "Run a health check on all my sites and tell me which ones need attention."
+
+The agent will use the `sites_health_check` tool to check performance trends, sitemap status, and traffic anomalies — returning a status of healthy, warning, or critical for each site.
+
 ## Tips for Success
 
 *   **Specify the Site:** Always include the `siteUrl` in your prompt if you have access to multiple sites.

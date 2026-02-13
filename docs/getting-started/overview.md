@@ -11,6 +11,7 @@ Unlike simple API wrappers, this project focuses on providing **SEO Intelligence
 
 *   **Advanced Analytics:** Go beyond basic queries with multi-dimensional analysis and rolling averages.
 *   **SEO Insights:** Deterministic detection of cannibalization, Striking Distance keywords, and "Low-Hanging Fruit."
+*   **Site Health Check:** Automated diagnostics across all your properties — performance trends, sitemap status, and anomaly detection in one call.
 *   **Site Management:** List, add, and verify site properties.
 *   **Sitemap Control:** List, submit, and delete sitemaps.
 *   **URL Inspection:** Check the indexing status of individual pages.

@@ -23,6 +23,16 @@ Useful if you manage multiple properties.
 3. Which site had the highest percentage growth in non-brand traffic?
 ```
 
+## The "Health Check" Prompt
+Monitor the health of one or all sites.
+
+```markdown
+1. Run a health check across all my Search Console properties.
+2. For each site, report the status (healthy / warning / critical) and any issues found.
+3. For sites with critical status, use the drop attribution tool to check for algorithm update correlation.
+4. Provide a ranked list of sites that need attention, with specific next steps for each.
+```
+
 ## Common Tips for Custom Agents
 
 *   **Specify Dimension:** When asking for analytics, specify if you want it by `query`, `page`, `country`, or `date`.

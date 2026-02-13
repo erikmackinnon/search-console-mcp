@@ -45,7 +45,8 @@
           "tools/analytics",
           "tools/seo-intelligence",
           "tools/inspection",
-          "tools/sites-and-sitemaps"
+          "tools/sites-and-sitemaps",
+          "tools/site-health"
         ]
       },
       {

@@ -58,7 +58,10 @@ interface ServiceAccountKey {
 function validateKeyFile(path: string): ServiceAccountKey | null {
     try {
         const sanitizedPath = path.trim().replace(/\0/g, '');
-        const fullPath = resolve(sanitizedPath.replace('~', homedir()));
+        const expandedPath = sanitizedPath.startsWith('~')
+            ? sanitizedPath.replace('~', homedir())
+            : sanitizedPath;
+        const fullPath = resolve(expandedPath);
 
         if (!existsSync(fullPath)) {
             printError(`File not found: ${fullPath}`);
@@ -175,7 +178,7 @@ export function resolveRepo(dirname: string): string {
     return repo;
 }
 
-async function main() {
+export async function main() {
     printHeader();
 
     console.log('This wizard will help you set up Search Console MCP.');
@@ -261,16 +264,17 @@ async function main() {
 
     // Step 5: Support the project
     printStep(5, 'Support this project');
-    const answer = await ask('Would you like to star the repo on GitHub? (y/n): ');
-    if (answer.toLowerCase().startsWith('y')) {
+    const answer = await ask('Would you like to star the repo on GitHub? (Y/n): ');
+    if (answer === '' || answer.toLowerCase().startsWith('y')) {
         try {
             const repo = resolveRepo(__dirname);
 
-            if (repo && repo.includes('/')) {
+            // Harden against command injection: ensure repo is in 'owner/repo' format
+            if (repo && /^[a-zA-Z0-9_.-]+\/[a-zA-Z0-9_.-]+$/.test(repo)) {
                 execSync(`gh api -X PUT /user/starred/${repo}`, { stdio: 'ignore' });
                 printSuccess('Thanks for your support! ⭐');
             } else {
-                throw new Error('Could not resolve repo');
+                throw new Error('Invalid repository format');
             }
         } catch (error) {
             console.log('\nCould not star automatically. Please star us manually if you like:');

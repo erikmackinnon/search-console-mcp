@@ -15,7 +15,7 @@ Setting up `search-console-mcp` is straightforward. You can run it directly usin
 The easiest way to get started is by using our built-in setup wizard:
 
 ```bash
-npx search-console-mcp-setup
+npx -y search-console-mcp setup
 ```
 
 This wizard will help you:

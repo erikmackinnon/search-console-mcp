@@ -26,14 +26,38 @@ export interface DropAttribution {
  * Historical Google Algorithm Update dates (recent notable ones)
  */
 const ALGORITHM_UPDATES = [
+    // 2022
+    { date: '2022-09-12', name: 'September 2022 Core Update' },
+    { date: '2022-09-20', name: 'September 2022 Product Review Update' },
+    { date: '2022-10-19', name: 'October 2022 Spam Update' },
+    { date: '2022-12-05', name: 'December 2022 Helpful Content Update' },
+    { date: '2022-12-14', name: 'December 2022 Link Spam Update' },
+    // 2023
+    { date: '2023-02-21', name: 'February 2023 Product Reviews Update' },
+    { date: '2023-03-15', name: 'March 2023 Core Update' },
+    { date: '2023-04-12', name: 'April 2023 Reviews Update' },
+    { date: '2023-08-22', name: 'August 2023 Core Update' },
     { date: '2023-09-14', name: 'September 2023 Helpful Content Update' },
+    { date: '2023-10-04', name: 'October 2023 Spam Update' },
     { date: '2023-10-05', name: 'October 2023 Core Update' },
     { date: '2023-11-02', name: 'November 2023 Core Update' },
+    { date: '2023-11-08', name: 'November 2023 Reviews Update' },
+    // 2024
     { date: '2024-03-05', name: 'March 2024 Core Update' },
+    { date: '2024-05-06', name: 'Site Reputation Abuse (Manual Actions)' },
+    { date: '2024-05-14', name: 'AI Overviews Rollout' },
     { date: '2024-06-20', name: 'June 2024 Spam Update' },
     { date: '2024-08-15', name: 'August 2024 Core Update' },
     { date: '2024-11-11', name: 'November 2024 Core Update' },
-    { date: '2025-01-15', name: 'January 2025 Core Update' }
+    { date: '2024-12-12', name: 'December 2024 Core Update' },
+    { date: '2024-12-19', name: 'December 2024 Spam Update' },
+    // 2025
+    { date: '2025-03-13', name: 'March 2025 Core Update' },
+    { date: '2025-06-30', name: 'June 2025 Core Update' },
+    { date: '2025-08-26', name: 'August 2025 Spam Update' },
+    { date: '2025-12-11', name: 'December 2025 Core Update' },
+    // 2026
+    { date: '2026-02-05', name: 'February 2026 Discover Core Update' },
 ];
 
 /**
