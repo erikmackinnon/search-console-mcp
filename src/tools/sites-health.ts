@@ -223,9 +223,9 @@ async function limitConcurrency<T, R>(
         const p = fn(item);
         results.push(p);
 
-        const e = p.then(
-            () => executing.delete(e),
-            () => executing.delete(e)
+        const e: Promise<void> = p.then(
+            () => { executing.delete(e); },
+            () => { executing.delete(e); }
         );
         executing.add(e);
 
