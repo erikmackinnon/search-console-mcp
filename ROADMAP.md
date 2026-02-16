@@ -79,6 +79,12 @@ This document outlines the planned features and improvements for this project.
 
 - `sites_health_check` - Check all sites for issues
 
+
+### v1.9.4 - OAuth2 Support
+
+- Browser-based OAuth2 flow for personal accounts
+- Token refresh handling
+
 ---
 
 ## 🚧 In Progress
@@ -98,10 +104,8 @@ _Nothing currently in progress_
 | Export to CSV/JSON | Export analytics data |
 | Batch URL status | Check indexing status for URL list |
 
-### v2.0.0 - OAuth2 Support
+### v2.0.0 - Multi-account Support
 
-- Browser-based OAuth2 flow for personal accounts
-- Token refresh handling
 - Multi-account support
 - Account switcher
 

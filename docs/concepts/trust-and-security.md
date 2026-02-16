@@ -5,18 +5,19 @@ description: "Safe automation for your most valuable data."
 
 Search Console data is sensitive. It reveals exactly what keywords your business depends on. We designed this MCP server with a "security-first" mindset.
 
-## Zero Data Persistence
+## Secure Token Storage
 
-The `search-console-mcp` server does not have a database. It does not log your API keys or your performance data to any external server. 
-*   **Authentication:** Happens locally using your JSON key file.
-*   **Processing:** Happens in-memory during the request.
-*   **Storage:** Nothing is saved once the process terminates.
+We treat your Google credentials with the highest level of security available on your operating system.
+
+*   **System Keychain:** Access tokens and refresh tokens are stored primarily in your OS's native credential manager (macOS Keychain, Windows Credential Manager, Linux Secret Service).
+*   **Hardware-Bound Encryption:** If keychain storage is unavailable, tokens are encrypted using **AES-256-GCM** with a key derived from your unique hardware machine ID. This means sophisticated malware or attackers cannot simply steal the file and use it elsewhere.
+*   **Minimal Footprint:** We only store the `refresh_token` and `expiry_date`. No other personal information is persisted.
 
 ## Explainability Over Everything
 
 We believe agents should be able to explain *how* they reached a conclusion.
 *   **Tool Proofs:** Advanced tools don't just say "Fix this." They provide the supporting data (clicks, benchmarks, thresholds) so you can verify the logic.
-*   **No Black Boxes:** The intelligence tools are open-source. You can see exactly how a "cannibalization conflict" score is calculated in our [SEO engine](https://github.com/saurabhsharma2u/search-console-mcp/blob/main/src/tools/seo-insights.ts).
+*   **No Black Boxes:** The intelligence tools are open-source. You can see exactly how a "cannibalization conflict" score is calculated in our SEO engine.
 
 ## Boundary Defenses
 
@@ -28,6 +29,6 @@ The MCP server is explicitly built **NOT** to do certain things:
 ## Your Responsibilities
 
 While the server is secure, you are responsible for:
-1.  **Protecting your JSON key file.** Never commit it to a public repository.
-2.  **Service Account Scope.** Only grant the Service Account access to the properties it needs.
+1.  **Protecting your machine access.** Your tokens are encrypted with your machine ID, so physical access or remote execution on your specific machine is required to decrypt them.
+2.  **Reviewing Access.** Regularly check [Google Account Permissions](https://myaccount.google.com/permissions) to see which apps have access to your data.
 3.  **Prompt Oversight.** Always review the agent's findings before making significant business decisions.

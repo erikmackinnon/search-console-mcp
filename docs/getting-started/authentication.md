@@ -3,45 +3,74 @@ title: "Authentication"
 description: "Setting up Google Cloud credentials for Search Console."
 ---
 
-To use this MCP server, you must authenticate with the Google Search Console API. We use **Service Accounts** because they provide the most reliable "headless" access for AI agents.
+To use this MCP server, you must authenticate with the Google Search Console API. We recommend the **Secure Desktop Flow**, which uses your local machine's keychain and hardware-bound encryption to store tokens safely.
 
-## 1. Create a Service Account
+## 1. OAuth 2.0 Desktop Flow (Recommended)
 
+This method allows you to log in with your Google account via a browser, just like any other desktop application.
+
+### Security Features
+- **System Keychain**: Tokens are stored in your OS's native credential manager (macOS Keychain, Windows Credential Manager, Linux Secret Service).
+- **Hardware-Bound Encryption**: Fallback storage uses AES-256-GCM with a key derived from your unique machine ID. Tokens cannot be decrypted on other devices.
+- **Multi-Account Support**: Easily switch between multiple Google accounts.
+
+### How to Login
+
+Run the following command in your terminal:
+
+```bash
+npx search-console-mcp setup
+```
+
+1.  A local secure server will start.
+2.  Your browser will open to the Google Authorization page.
+3.  Grant access to your Search Console data.
+4.  The CLI will automatically fetch your email and securely store your credentials.
+
+### Logout & Management
+
+You can manage your sessions directly from the CLI:
+
+```bash
+# Logout of the default account
+npx search-console-mcp logout
+
+# Logout of a specific account by email
+npx search-console-mcp logout user@gmail.com
+```
+
+---
+
+## 2. Service Account (Advanced / Headless)
+
+For server-side environments or automated tasks where interactive login isn't possible, you can use a Google Cloud Service Account.
+
+### Step 1: Create a Service Account
 1.  Go to the [Google Cloud Console](https://console.cloud.google.com/).
 2.  Create a new project (or select an existing one).
 3.  Go to **IAM & Admin** > **Service Accounts**.
 4.  Click **Create Service Account**.
 5.  Give it a name (e.g., `seo-agent`) and click **Create and Continue**.
-6.  (Optional) Assign a role. You don't actually need project-level roles for Search Console access, but "Viewer" is safe.
-7.  Click **Done**.
+6.  Click **Done**.
 
-## 2. Generate a JSON Key
-
+### Step 2: Generate a JSON Key
 1.  In the Service Accounts list, click on your new account.
 2.  Select the **Keys** tab.
 3.  Click **Add Key** > **Create new key**.
 4.  Select **JSON** and click **Create**.
 5.  A JSON file will download to your computer. **Keep this file secure.**
 
-## 3. Enable the APIs
-
-You must enable the following APIs in your Google Cloud Project:
-*   [Google Search Console API](https://console.cloud.google.com/apis/library/searchconsole.googleapis.com)
-*   [PageSpeed Insights API](https://console.cloud.google.com/apis/library/pagespeedonline.googleapis.com) (Optional, for performance tools)
-
-## 4. Grant Access in Search Console
-
-Finally, you must give your Service Account permission to see your data:
-
+### Step 3: Grant Access in Search Console
+You must give your Service Account permission to see your data:
 1.  Open the [Google Search Console](https://search.google.com/search-console).
 2.  Go to **Settings** > **Users and permissions**.
 3.  Click **Add User**.
 4.  Enter the **Service Account Email** (e.g., `seo-agent@your-project.iam.gserviceaccount.com`).
-5.  Select Permissions:
-    *   **Full:** Required for sitemap submission and site management.
-    *   **Restricted/Owner:** As needed.
-6.  Click **Add**.
+5.  Select Permissions (Full or Restricted) and click **Add**.
 
-<Note>
- It can take a few minutes for the permissions to propagate. If the MCP server returns "Permission denied," wait 5 minutes and try again.
-</Note>
+### Step 4: Configure the Server
+Set the `GOOGLE_APPLICATION_CREDENTIALS` environment variable to point to your key file:
+
+```bash
+export GOOGLE_APPLICATION_CREDENTIALS="/path/to/your/key.json"
+```
