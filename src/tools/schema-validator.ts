@@ -55,8 +55,8 @@ export async function validateSchema(
             return { valid: false, errors: ["No structured data (JSON-LD) found"], schemas: [] };
         }
 
+        const validator = new Validator();
         const validationPromises = schemas.map(async (schema) => {
-            const validator = new Validator();
             try {
                 const result = await validator.validate(schema);
                 if (result && Array.isArray(result) && result.length > 0) {
