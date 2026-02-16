@@ -17,10 +17,8 @@
       "url": "https://github.com/saurabhsharma2u/search-console-mcp"
     }
   ],
-  "home": "index",
   "navigation": {
     "pages": [
-      "index",
       {
         "group": "Getting Started",
         "pages": [
@@ -73,7 +71,10 @@
           "contributing/adding-tools",
           "contributing/testing"
         ]
-      }
+      },
+      "privacy-policy",
+      "terms-of-service",
+      "security"
     ]
   },
   "footerSocials": {
