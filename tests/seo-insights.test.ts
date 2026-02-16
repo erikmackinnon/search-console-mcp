@@ -10,10 +10,12 @@ import {
     generateRecommendations,
     findLowHangingFruit
 } from '../src/tools/seo-insights';
+import { clearAnalyticsCache } from '../src/tools/analytics';
 
 describe('SEO Insights Tools', () => {
     beforeEach(() => {
         vi.clearAllMocks();
+        clearAnalyticsCache();
     });
 
     describe('findLowCTROpportunities', () => {
