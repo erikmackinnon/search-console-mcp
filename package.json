@@ -1,6 +1,6 @@
 {
   "name": "search-console-mcp",
-  "version": "1.9.4",
+  "version": "1.10.0",
   "mcpName": "io.github.saurabhsharma2u/search-console-mcp",
   "description": "MCP server for Google Search Console API",
   "type": "module",

@@ -80,7 +80,7 @@ This document outlines the planned features and improvements for this project.
 - `sites_health_check` - Check all sites for issues
 
 
-### v1.9.4 - OAuth2 Support
+### v1.10.0 - OAuth2 Support
 
 - Browser-based OAuth2 flow for personal accounts
 - Token refresh handling
