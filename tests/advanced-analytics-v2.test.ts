@@ -2,10 +2,12 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { mockSearchConsoleClient } from './mocks';
 import { analyzeDropAttribution, getTimeSeriesInsights } from '../src/tools/advanced-analytics';
+import { clearAnalyticsCache } from '../src/tools/analytics';
 
 describe('Advanced Analytics V2 (Attribution & Time Series)', () => {
     beforeEach(() => {
         vi.clearAllMocks();
+        clearAnalyticsCache();
     });
 
     describe('analyzeDropAttribution', () => {

@@ -7,7 +7,8 @@ import {
     getPerformanceSummary,
     comparePeriods,
     getTopQueries,
-    getTopPages
+    getTopPages,
+    clearAnalyticsCache
 } from '../src/tools/analytics';
 import { inspectUrl } from '../src/tools/inspection';
 
@@ -112,6 +113,7 @@ describe('Sitemaps Tools', () => {
 describe('Analytics Tools', () => {
     beforeEach(() => {
         vi.clearAllMocks();
+        clearAnalyticsCache();
     });
 
     it('should query analytics', async () => {
