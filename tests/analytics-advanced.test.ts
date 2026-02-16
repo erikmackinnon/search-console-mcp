@@ -5,12 +5,14 @@ import {
     detectTrends,
     detectAnomalies,
     getPerformanceByCountry,
-    getPerformanceBySearchAppearance
+    getPerformanceBySearchAppearance,
+    clearAnalyticsCache
 } from '../src/tools/analytics';
 
 describe('Advanced Analytics Tools', () => {
     beforeEach(() => {
         vi.clearAllMocks();
+        clearAnalyticsCache();
     });
 
     describe('detectTrends', () => {
@@ -146,6 +148,11 @@ describe('Advanced Analytics Tools', () => {
 });
 
 describe('getPerformanceByCountry', () => {
+    beforeEach(() => {
+        vi.clearAllMocks();
+        clearAnalyticsCache();
+    });
+
     it('should get performance sorted by clicks', async () => {
         const mockRows = [
             { keys: ['USA'], clicks: 100, impressions: 1000, ctr: 0.1, position: 1 },
@@ -169,6 +176,11 @@ describe('getPerformanceByCountry', () => {
 });
 
 describe('getPerformanceBySearchAppearance', () => {
+    beforeEach(() => {
+        vi.clearAllMocks();
+        clearAnalyticsCache();
+    });
+
     it('should get performance data', async () => {
         const mockRows = [
             { keys: ['AMP_BLUE_LINK'], clicks: 100, impressions: 1000 }

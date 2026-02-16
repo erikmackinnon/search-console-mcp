@@ -1,59 +1,92 @@
-# Contributing to Google Search Console MCP Server
+# Contributing to Search Console MCP
 
-Thank you for your interest in contributing! This document provides guidelines for contributing to this project.
+Thanks for your interest in contributing.
+
+This project aims to provide a secure, minimal, AI-friendly interface to Google Search Console data. Contributions should align with that philosophy: structured, deterministic, and security-conscious.
+
+---
 
 ## Getting Started
 
 1. Fork the repository
-2. Clone your fork: `git clone https://github.com/YOUR_USERNAME/search-console-mcp.git`
-3. Install dependencies: `npm install`
-4. Create a branch: `git checkout -b feature/your-feature-name`
+2. Clone your fork
+3. Install dependencies
 
-## Development
+```bash
+npm install
+```
 
-### Prerequisites
+4. Run in development mode
+```bash
+npm run dev
+```
+---
 
-- Node.js 18+
-- A Google Cloud project with Search Console API enabled
-- Service account credentials with appropriate permissions
+## Development Principles
 
-### Setup
+Please follow these core principles:
 
-1. Copy `.env.example` to `.env` and configure your credentials
-2. Run tests: `npm test`
-3. Build: `npm run build`
+- Keep OAuth scope minimal (read-only by default)
+- Avoid unnecessary dependencies
+- Prefer deterministic logic over heuristic magic
+- Do not introduce server-side data collection
+- Maintain secure token storage patterns
 
-### Code Style
+If adding new tools:
+- Validate input with `zod`
+- Keep responses structured and predictable
+- Avoid returning massive raw datasets unless explicitly required
 
-- Use TypeScript with strict mode
-- Add type annotations to all function parameters and return types
-- Write descriptive commit messages
-- Add tests for new functionality
+---
 
-## Pull Request Process
+## Pull Requests
 
-1. Ensure all tests pass: `npm test`
-2. Build successfully: `npm run build`
-3. Update documentation if needed
-4. Create a pull request with a clear description of your changes
+Before submitting a PR:
 
-## Adding New Tools
+- Ensure code compiles (`npm run build`)
+- Ensure tests pass (`npm test`)
+- Keep changes focused and minimal
+- Add documentation updates if relevant
 
-When adding new MCP tools:
+PRs that introduce breaking changes should clearly explain:
 
-1. Create the implementation in `src/tools/`
-2. Register the tool in `src/index.ts`
-3. Add tests in `tests/`
-4. Update `README.md` with the new tool documentation
+- Why the change is necessary
+- Migration steps (if any)
 
-## Reporting Issues
+---
 
-Please include:
-- Node.js version
-- Steps to reproduce
-- Expected vs actual behavior
-- Error messages if applicable
+## Security Issues
 
-## License
+If you discover a security vulnerability:
 
-By contributing, you agree that your contributions will be licensed under the MIT License.
+- Do not open a public issue
+- Email: saurabhsharma2u@gmail.com
+- Provide detailed reproduction steps
+
+We take security seriously, especially regarding OAuth and token storage.
+
+---
+
+## Code Style
+
+- TypeScript only
+- Strict typing enabled
+- No unnecessary abstractions
+- Keep files small and focused
+
+---
+
+## Philosophy
+
+Search Console MCP is designed to:
+
+- Be local-first
+- Be secure by default
+- Be AI-friendly
+- Avoid unnecessary SaaS complexity
+
+If your contribution aligns with that, it’s welcome.
+
+---
+
+Thanks for helping improve the project.

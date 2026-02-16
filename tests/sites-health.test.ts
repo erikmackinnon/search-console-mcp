@@ -1,10 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { mockSearchConsoleClient } from './mocks';
 import { healthCheck } from '../src/tools/sites-health';
+import { clearAnalyticsCache } from '../src/tools/analytics';
 
 describe('Sites Health Check', () => {
     beforeEach(() => {
         vi.clearAllMocks();
+        clearAnalyticsCache();
     });
 
     const makePerfRows = (clicks: number, impressions: number, ctr: number, position: number) => ({

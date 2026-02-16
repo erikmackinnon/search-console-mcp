@@ -1,6 +1,34 @@
 import { getSearchConsoleClient } from '../google-client.js';
 import { searchconsole_v1 } from 'googleapis';
 
+const CACHE_TTL_MS = 60 * 1000; // 60 seconds
+const MAX_CACHE_SIZE = 100;
+
+type CacheValue =
+  | { data: searchconsole_v1.Schema$ApiDataRow[]; timestamp: number }
+  | Promise<searchconsole_v1.Schema$ApiDataRow[]>;
+
+const analyticsCache = new Map<string, CacheValue>();
+
+export function clearAnalyticsCache() {
+  analyticsCache.clear();
+}
+
+function generateCacheKey(options: AnalyticsOptions): string {
+  const clone = { ...options };
+  // Sort arrays to ensure deterministic keys
+  if (clone.dimensions) {
+    clone.dimensions = [...clone.dimensions].sort();
+  }
+  if (clone.filters) {
+    clone.filters = [...clone.filters].sort((a, b) =>
+      (a.dimension + a.operator + a.expression).localeCompare(b.dimension + b.operator + b.expression)
+    );
+  }
+  // Sort object keys
+  return JSON.stringify(clone, Object.keys(clone).sort());
+}
+
 /**
  * Options for querying Google Search Console analytics data.
  */
@@ -116,39 +144,76 @@ export interface TopItemsResult {
  * @returns A promise resolving to an array of data rows from GSC.
  */
 export async function queryAnalytics(options: AnalyticsOptions): Promise<searchconsole_v1.Schema$ApiDataRow[]> {
-  const client = await getSearchConsoleClient();
-  const requestBody: searchconsole_v1.Schema$SearchAnalyticsQueryRequest = {
-    startDate: options.startDate,
-    endDate: options.endDate,
-    dimensions: options.dimensions || [],
-    type: options.type || 'web',
-    aggregationType: options.aggregationType || 'auto',
-    dataState: options.dataState || 'final',
+  const cacheKey = generateCacheKey(options);
+  const now = Date.now();
+  const cached = analyticsCache.get(cacheKey);
 
-    rowLimit: Math.min(options.limit || 1000, 25000),
-  };
-
-  // Add pagination support
-  if (options.startRow !== undefined && options.startRow > 0) {
-    requestBody.startRow = options.startRow;
+  if (cached) {
+    if ('then' in cached) {
+      return cached;
+    }
+    if (now - cached.timestamp < CACHE_TTL_MS) {
+      return cached.data;
+    }
+    analyticsCache.delete(cacheKey);
   }
 
-  if (options.filters && options.filters.length > 0) {
-    requestBody.dimensionFilterGroups = [{
-      filters: options.filters.map(f => ({
-        dimension: f.dimension,
-        operator: f.operator,
-        expression: f.expression
-      }))
-    }];
-  }
+  const fetchPromise = (async () => {
+    try {
+      const client = await getSearchConsoleClient();
+      const requestBody: searchconsole_v1.Schema$SearchAnalyticsQueryRequest = {
+        startDate: options.startDate,
+        endDate: options.endDate,
+        dimensions: options.dimensions || [],
+        type: options.type || 'web',
+        aggregationType: options.aggregationType || 'auto',
+        dataState: options.dataState || 'final',
 
-  const res = await client.searchanalytics.query({
-    siteUrl: options.siteUrl,
-    requestBody
-  });
+        rowLimit: Math.min(options.limit || 1000, 25000),
+      };
 
-  return res.data.rows || [];
+      // Add pagination support
+      if (options.startRow !== undefined && options.startRow > 0) {
+        requestBody.startRow = options.startRow;
+      }
+
+      if (options.filters && options.filters.length > 0) {
+        requestBody.dimensionFilterGroups = [{
+          filters: options.filters.map(f => ({
+            dimension: f.dimension,
+            operator: f.operator,
+            expression: f.expression
+          }))
+        }];
+      }
+
+      const res = await client.searchanalytics.query({
+        siteUrl: options.siteUrl,
+        requestBody
+      });
+
+      const rows = res.data.rows || [];
+
+      analyticsCache.set(cacheKey, {
+        data: rows,
+        timestamp: Date.now()
+      });
+
+      // Simple LRU-like eviction: remove oldest if over limit
+      if (analyticsCache.size > MAX_CACHE_SIZE) {
+        const firstKey = analyticsCache.keys().next().value;
+        if (firstKey) analyticsCache.delete(firstKey);
+      }
+
+      return rows;
+    } catch (error) {
+      analyticsCache.delete(cacheKey);
+      throw error;
+    }
+  })();
+
+  analyticsCache.set(cacheKey, fetchPromise);
+  return fetchPromise;
 }
 
 /**

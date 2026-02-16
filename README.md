@@ -1,12 +1,9 @@
+
 # Google Search Console MCP Server
 
 A Model Context Protocol (MCP) server that transforms how you interact with Google Search Console. Stop exporting CSVs and start asking questions.
 
 [📚 View Documentation](https://searchconsolemcp.mintlify.app/)
-
----
-
-### [🏠 Overview](#) | [🎯 Prompts](#-magic-prompts) | [🚀 Quick Start](#-quick-start) | [🛠️ Tools](#-tools-reference)
 
 ---
 
@@ -28,7 +25,6 @@ A Model Context Protocol (MCP) server that transforms how you interact with Goog
 > "Find low-hanging fruit keywords (positions 11-20) with high impressions that I should optimize."
 
 ---
-
 ## 🎯 Magic Prompts
 
 Copy and paste these into your MCP client (Claude Desktop, etc.) to see the intelligence engine in action:
@@ -53,69 +49,62 @@ Copy and paste these into your MCP client (Claude Desktop, etc.) to see the inte
 
 ---
 
-## 🔒 Security & Privacy
+## 🔐 Authentication (Desktop Flow)
 
-We take your data security seriously. This tool is designed to be **local-first** and **secure by default**.
+Search Console MCP uses a **Secure Desktop Flow**. This provides high-security, professional grade authentication for your Google account:
+- **Multi-Account Support**: Automatically detects and stores separate tokens for different Google accounts based on your email.
+- **System Keychain Primary**: Tokens are stored in your OS's native credential manager (macOS Keychain, Windows Credential Manager, or Linux Secret Service).
+- **AES-256-GCM Hardware-Bound Encryption**: Fallback storage is encrypted with AES-256-GCM using a key derived from your unique hardware machine ID. Tokens stolen from your machine cannot be decrypted on another computer.
+- **Silent Background Refresh**: Tokens auto-refresh silently when they expire.
 
-*   **Credentials Never Logged**: Your Google Service Account keys are used *only* in memory to authenticate with Google APIs. They are never written to disk, logs, or sent to any third-party server.
-*   **Local Execution**: The code runs entirely on your local machine (or wherever you host your MCP server).
-*   **Path Traversal Protection**: The setup wizard implements strict validation for file paths, including null-byte removal, extension enforcement (.json), and size limits (1MB) to prevent unauthorized file access.
-*   **Direct Communication**: All API calls go directly from your machine to Google's servers (`googleapis.com`). There is no middleman or proxy server.
-*   **Open Source**: The code is fully open source. You can audit exactly how your credentials are used in `src/google-client.ts`.
-
----
-
-## Features
-
-- **Advanced Analytics**: Query performance data with powerful filters (Regex supported).
-    - *New*: Support for 'News', 'Discover', 'Image' search types.
-    - *New*: 'Fresh' data support for real-time monitoring.
-    - *New*: **Drop Attribution** to identify device-level traffic losses.
-    - *New*: **Time Series Insights** with rolling averages and trend forecasting.
-- **Trend Detection**: Automatically identify rising or falling trends in your traffic.
-- **Anomaly Detection**: Spot unusual spikes or drops that need attention.
-- **Sitemaps Management**: List, submit, and validte sitemaps.
-- **URL Inspection**: Check real-time indexing status and mobile usability.
-- **PageSpeed Insights**: Integrated performance and Core Web Vitals analysis.
-- **Schema Validation**: Validate JSON-LD structured data.
-
----
-
-## Quick Start
-
-### 1. Run the Setup Wizard
-First, use the interactive wizard to validate your credentials and get your configuration:
-
+### 🚀 Step 1 — Initiate Login
+Run the following command to start the authorization process:
 ```bash
-npx -y search-console-mcp setup
+npx search-console-mcp setup
 ```
 
-The wizard will guide you through:
-- Creating a Google Service Account.
-- Adding the account to Search Console.
-- Validating your JSON key file.
-- Generating the configuration for your MCP client.
+The CLI will:
+1. Briefly start a secure local server to handle the redirect.
+2. Open your default web browser to the Google Authorization page.
+3. Automatically fetch your email after authorization to label your credentials securely.
 
-### 2. Connect to an MCP Client
+### 🔑 Step 2 — Logout & Management
+To wipe your credentials from both the keychain and the disk:
+```bash
+# Logout of the default account
+npx search-console-mcp logout
 
-**Note:** The server uses `stdio` to communicate. Do not run `npx search-console-mcp` directly in your terminal; it is meant to be run by an MCP client like Claude Desktop or Cursor.
-
-#### Claude Desktop Configuration
-Add this to your `claude_desktop_config.json`:
-
-```json
-{
-  "mcpServers": {
-    "google-search-console": {
-      "command": "npx",
-      "args": ["-y", "search-console-mcp"],
-      "env": {
-        "GOOGLE_APPLICATION_CREDENTIALS": "/absolute/path/to/your/service-account-key.json"
-      }
-    }
-  }
-}
+# Logout of a specific account
+npx search-console-mcp logout user@gmail.com
 ```
+
+---
+
+## 🔑 Alternative: Service Account (Advanced)
+
+For server-side environments or automated tasks where interactive login isn't possible, you can use a Google Cloud Service Account.
+
+### Setup:
+1.  **Create Service Account**: Go to the [Google Cloud Console](https://console.cloud.google.com/iam-admin/serviceaccounts) and create a service account.
+2.  **Generate Key**: Click "Keys" > "Add Key" > "Create new key" (JSON). Download this file.
+3.  **Share Access**: In Google Search Console, add the service account's email address (e.g., `account@project.iam.gserviceaccount.com`) as a user with at least "Full" or "Restricted" permissions.
+4.  **Configure**: Point the server to your key file:
+    ```bash
+    export GOOGLE_APPLICATION_CREDENTIALS="/path/to/your/key.json"
+    ```
+
+---
+
+
+## 🛡️ Fort Knox Security
+
+This MCP server implements a multi-layered security architecture:
+
+*   **Keychain Integration**: Primarily uses the **macOS Keychain**, **Windows Credential Manager**, or **libsecret (Linux)** to store tokens.
+*   **Hardware-Bound Vault**: Fallback tokens are stored in `~/.search-console-mcp-tokens.enc` and encrypted with **AES-256-GCM**.
+*   **Machine Fingerprinting**: The encryption key is derived from your unique hardware UUID and OS user. The encrypted file is useless if moved to another machine.
+*   **Minimalist Storage**: Only the `refresh_token` and `expiry_date` are stored.
+*   **Strict Unix Permissions**: The fallback file is created with `mode 600` (read/write only by your user).
 
 ---
 
@@ -165,12 +154,9 @@ These are low-level tools designed to be used by other AI agents to build comple
 | `pagespeed_analyze` | Lighthouse scores & Core Web Vitals. |
 | `schema_validate` | Validate Structured Data (JSON-LD). |
 
----
 
-## Contributing
-
-We love contributions! Please see [CONTRIBUTING.md](./CONTRIBUTING.md) for details.
 
 ## License
 
-MIT
+[MIT](LICENSE.md)
+[Contributing](CONTRIBUTING.md)
