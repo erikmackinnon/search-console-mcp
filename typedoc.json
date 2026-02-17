@@ -2,18 +2,14 @@
     "$schema": "https://typedoc.org/schema.json",
     "entryPoints": [
         "src/index.ts",
-        "src/tools/advanced-analytics.ts",
-        "src/tools/analytics.ts",
-        "src/tools/inspection.ts",
-        "src/tools/pagespeed.ts",
-        "src/tools/schema-validator.ts",
-        "src/tools/seo-insights.ts",
-        "src/tools/seo-primitives.ts",
-        "src/tools/sitemaps.ts",
-        "src/tools/sites.ts"
+        "src/google/client.ts",
+        "src/bing/client.ts",
+        "src/google/tools/*.ts",
+        "src/bing/tools/*.ts",
+        "src/common/tools/*.ts"
     ],
     "out": "docs-site",
-    "name": "Google Search Console MCP Server API",
+    "name": "Search Console MCP Server API",
     "includeVersion": true,
     "plugin": [],
     "exclude": [

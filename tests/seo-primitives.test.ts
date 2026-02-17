@@ -4,7 +4,7 @@ import {
     calculateTrafficDelta,
     isBrandQuery,
     isCannibalized
-} from '../src/tools/seo-primitives';
+} from '../src/common/tools/seo-primitives';
 
 describe('SEO Primitives', () => {
 

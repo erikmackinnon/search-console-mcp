@@ -7,7 +7,7 @@ import {
     getPerformanceByCountry,
     getPerformanceBySearchAppearance,
     clearAnalyticsCache
-} from '../src/tools/analytics';
+} from '../src/google/tools/analytics';
 
 describe('Advanced Analytics Tools', () => {
     beforeEach(() => {

@@ -2,7 +2,7 @@
   "name": "search-console-mcp",
   "version": "1.10.0",
   "mcpName": "io.github.saurabhsharma2u/search-console-mcp",
-  "description": "MCP server for Google Search Console API",
+  "description": "MCP server for Google Search and Bing Search APIs",
   "type": "module",
   "main": "dist/index.js",
   "bin": {
@@ -23,6 +23,7 @@
   "keywords": [
     "mcp",
     "bing-search",
+    "bing webmaster",
     "google-search-console",
     "seo"
   ],

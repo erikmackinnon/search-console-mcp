@@ -1,6 +1,6 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { validateSchema } from '../src/tools/schema-validator';
+import { validateSchema } from '../src/common/tools/schema-validator';
 
 // Mock Validator
 vi.mock('@adobe/structured-data-validator', () => {

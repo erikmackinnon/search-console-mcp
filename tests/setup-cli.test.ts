@@ -1,10 +1,10 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { runLogout } from '../src/setup.js';
-import * as googleClient from '../src/google-client.js';
+import * as googleClient from '../src/google/client.js';
 
 // Mock the google-client module
-vi.mock('../src/google-client.js', () => ({
+vi.mock('../src/google/client.js', () => ({
     logout: vi.fn(),
     startLocalFlow: vi.fn(),
     saveTokens: vi.fn(),

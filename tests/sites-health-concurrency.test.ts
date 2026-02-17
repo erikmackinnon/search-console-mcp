@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { mockSearchConsoleClient } from './mocks';
-import { healthCheck } from '../src/tools/sites-health';
+import { healthCheck } from '../src/google/tools/sites-health';
 
 describe('Concurrency Benchmark: sites-health', () => {
     let activeRequests = 0;

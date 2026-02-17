@@ -61,7 +61,8 @@
         "pages": [
           "prompts/claude",
           "prompts/cursor",
-          "prompts/generic-agents"
+          "prompts/generic-agents",
+          "prompts/unified-search"
         ]
       },
       {

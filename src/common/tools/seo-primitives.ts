@@ -1,4 +1,4 @@
-import { safeTest } from '../utils/regex.js';
+import { safeTest } from '../../common/utils/regex.js';
 
 /**
  * SEO Primitives: Atomic functions for building higher-level SEO agents.

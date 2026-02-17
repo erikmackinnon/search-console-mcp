@@ -1,4 +1,4 @@
-import { getSearchConsoleClient } from '../google-client.js';
+import { getSearchConsoleClient } from '../client.js';
 import { searchconsole_v1 } from 'googleapis';
 
 /**

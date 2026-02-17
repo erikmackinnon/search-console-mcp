@@ -85,6 +85,14 @@ This document outlines the planned features and improvements for this project.
 - Browser-based OAuth2 flow for personal accounts
 - Token refresh handling
 
+### v1.11.0 - Bing Webmaster Tools Support
+
+- `bing_sites` - List Bing sites
+- `bing_sitemaps` - List Bing sitemaps
+- `bing_inspection` - Inspect Bing URLs
+- `bing_analytics` - Get Bing analytics
+
+
 ---
 
 ## 🚧 In Progress

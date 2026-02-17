@@ -3,7 +3,7 @@ title: "Site Health Check"
 description: "Automated health diagnostics for one or all Search Console properties."
 ---
 
-The `sites_health_check` tool gives your AI agent the ability to perform a comprehensive, automated health check across your Search Console properties — or drill into a single site.
+The `sites_health_check` (Google) and `bing_sites_health` (Bing) tools give your AI agent the ability to perform a comprehensive, automated health check across your properties — or drill into a single site.
 
 ## How It Works
 

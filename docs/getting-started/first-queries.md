@@ -13,36 +13,53 @@ Start by asking the agent what it can see. This verifies that the authentication
 > "List the sites I have access to in Search Console."
 
 **Expected Agent Response:**
-> "I can see the following sites:
+> "I can see the following **Google Search Console** sites:
 > 1. https://example.com
-> 2. https://myblog.org"
+> 2. https://myblog.org
+>
+> I can see the following **Bing Webmaster Tools** sites:
+> 1. https://example.com"
 
 ## Step 2: Get a Basic Performance Summary
 
 Now, ask for a high-level overview of a specific site.
 
 **User Prompt:**
-> "Give me a summary of how https://example.com performed in the last 28 days compared to the period before."
+> "Give me a summary of how https://example.com performed in the last 28 days on both Google and Bing."
 
-The agent will likely use the `compare_periods` tool to give you a breakdown of clicks, impressions, and CTR changes.
+**Expected Agent Steps:**
+1.  Call `compare_periods` for Google.
+2.  Call `bing_rank_traffic_stats` for Bing.
+3.  Synthesize the answer.
 
 ## Step 3: Run an Intelligence Tool
 
 This is where the power of the MCP shines. Instead of asking for data, ask for an analysis.
 
 **User Prompt:**
-> "Can you find any 'quick wins' for https://example.com? I'm looking for pages ranking just off the first page that have high impressions."
+> "Can you find any 'quick wins' for https://example.com? I'm looking for pages ranking just off the first page."
 
-The agent will use the `seo_quick_wins` tool, which performs a deterministic filter to identify the best opportunities.
+**Expected Agent Steps:**
+1.  Call `seo_quick_wins` for Google.
+2.  Call `bing_opportunity_finder` for Bing.
 
 ## Step 4: Run a Site Health Check
 
 Now try the health check tool to get an instant diagnostic across your properties.
 
 **User Prompt:**
-> "Run a health check on all my sites and tell me which ones need attention."
+> "Run a health check on all my sites (Google and Bing) and tell me which ones need attention."
 
-The agent will use the `sites_health_check` tool to check performance trends, sitemap status, and traffic anomalies — returning a status of healthy, warning, or critical for each site.
+The agent will use the `sites_health_check` and `bing_sites_health` tools to check performance trends, sitemap status, and traffic anomalies.
+
+## Step 5: IndexNow (Bing Only)
+
+If you have a site verified on Bing, try notifying them of a new URL.
+
+**User Prompt:**
+> "I just published a new post at https://example.com/new-post. Notify Bing via IndexNow."
+
+The agent will use `bing_index_now` to instantly submit the URL for indexing.
 
 ## Tips for Success
 

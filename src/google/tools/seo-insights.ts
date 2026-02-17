@@ -1,5 +1,5 @@
 import { queryAnalytics } from './analytics.js';
-import { safeTestBatch } from '../utils/regex.js';
+import { safeTestBatch } from '../../common/utils/regex.js';
 
 
 /**

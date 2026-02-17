@@ -3,17 +3,38 @@ import 'dotenv/config';
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
-import * as sites from "./tools/sites.js";
-import * as sitemaps from "./tools/sitemaps.js";
-import * as analytics from "./tools/analytics.js";
-import * as inspection from "./tools/inspection.js";
-import * as pagespeed from "./tools/pagespeed.js";
-import * as seoInsights from "./tools/seo-insights.js";
-import * as seoPrimitives from "./tools/seo-primitives.js";
-import * as schemaValidator from "./tools/schema-validator.js";
-import * as advancedAnalytics from "./tools/advanced-analytics.js";
-import * as sitesHealth from "./tools/sites-health.js";
-import { formatError } from "./errors.js";
+import * as sites from "./google/tools/sites.js";
+import * as sitemaps from "./google/tools/sitemaps.js";
+import * as analytics from "./google/tools/analytics.js";
+import * as inspection from "./google/tools/inspection.js";
+import * as pagespeed from "./google/tools/pagespeed.js";
+import * as seoInsights from "./google/tools/seo-insights.js";
+import * as seoPrimitives from "./common/tools/seo-primitives.js";
+import * as schemaValidator from "./common/tools/schema-validator.js";
+import * as advancedAnalytics from "./google/tools/advanced-analytics.js";
+import * as sitesHealth from "./google/tools/sites-health.js";
+import * as bingSites from "./bing/tools/sites.js";
+import * as bingSitemaps from "./bing/tools/sitemaps.js";
+import * as bingAnalytics from "./bing/tools/analytics.js";
+import * as bingKeywords from "./bing/tools/keywords.js";
+import * as bingCrawl from "./bing/tools/crawl.js";
+import * as bingUrlSubmission from "./bing/tools/url-submission.js";
+import * as bingInspection from "./bing/tools/inspection.js";
+import * as bingLinks from "./bing/tools/links.js";
+import * as bingHealth from "./bing/tools/sites-health.js";
+import * as bingSeoInsights from "./bing/tools/seo-insights.js";
+import * as indexNow from "./bing/tools/index-now.js";
+import * as bingAdvancedAnalytics from "./bing/tools/advanced-analytics.js";
+import {
+  bingApiDocs,
+  indexNowDocs,
+  dimensionsDocs as bingDimensionsDocs,
+  filtersDocs as bingFiltersDocs,
+  searchTypesDocs as bingSearchTypesDocs,
+  patternsDocs as bingPatternsDocs,
+  algorithmUpdatesDocs as bingAlgorithmUpdatesDocs
+} from "./bing/docs/index.js";
+import { formatError } from "./common/errors.js";
 import { existsSync } from "fs";
 import { join } from "path";
 import { homedir } from "os";
@@ -753,7 +774,7 @@ server.tool(
   {},
   async () => {
     try {
-      const { starRepository } = await import("./tools/support.js");
+      const { starRepository } = await import("./google/tools/support.js");
       const result = await starRepository();
       return {
         content: [{ type: "text", text: result }]
@@ -764,7 +785,552 @@ server.tool(
   }
 );
 
-// Resources
+// --- Bing Tools ---
+
+server.tool(
+  "bing_sites_list",
+  "List all sites verified in Bing Webmaster Tools",
+  {},
+  async () => {
+    try {
+      const results = await bingSites.listSites();
+      return {
+        content: [{ type: "text", text: JSON.stringify(results, null, 2) }]
+      };
+    } catch (error) {
+      return formatError(error);
+    }
+  }
+);
+
+server.tool(
+  "bing_sitemaps_list",
+  "List sitemaps for a Bing site",
+  {
+    siteUrl: z.string().describe("The URL of the site")
+  },
+  async ({ siteUrl }) => {
+    try {
+      const results = await bingSitemaps.listSitemaps(siteUrl);
+      return {
+        content: [{ type: "text", text: JSON.stringify(results, null, 2) }]
+      };
+    } catch (error) {
+      return formatError(error);
+    }
+  }
+);
+
+server.tool(
+  "bing_sitemaps_submit",
+  "Submit a sitemap to Bing Webmaster Tools",
+  {
+    siteUrl: z.string().describe("The URL of the site"),
+    sitemapUrl: z.string().describe("The URL of the sitemap file")
+  },
+  async ({ siteUrl, sitemapUrl }) => {
+    try {
+      const result = await bingSitemaps.submitSitemap(siteUrl, sitemapUrl);
+      return {
+        content: [{ type: "text", text: result }]
+      };
+    } catch (error) {
+      return formatError(error);
+    }
+  }
+);
+
+server.tool(
+  "bing_analytics_query",
+  "Get query performance stats from Bing Webmaster Tools (Top Queries)",
+  {
+    siteUrl: z.string().describe("The URL of the site")
+  },
+  async ({ siteUrl }) => {
+    try {
+      const results = await bingAnalytics.getQueryStats(siteUrl);
+      return {
+        content: [{ type: "text", text: JSON.stringify(results, null, 2) }]
+      };
+    } catch (error) {
+      return formatError(error);
+    }
+  }
+);
+
+server.tool(
+  "bing_analytics_page",
+  "Get page performance stats from Bing Webmaster Tools (Top Pages)",
+  {
+    siteUrl: z.string().describe("The URL of the site")
+  },
+  async ({ siteUrl }) => {
+    try {
+      const results = await bingAnalytics.getPageStats(siteUrl);
+      return {
+        content: [{ type: "text", text: JSON.stringify(results, null, 2) }]
+      };
+    } catch (error) {
+      return formatError(error);
+    }
+  }
+);
+
+server.tool(
+  "bing_analytics_page_query",
+  "Get query performance stats for a specific page from Bing Webmaster Tools",
+  {
+    siteUrl: z.string().describe("The URL of the site"),
+    pageUrl: z.string().describe("The URL of the specific page")
+  },
+  async ({ siteUrl, pageUrl }) => {
+    try {
+      const results = await bingAnalytics.getPageQueryStats(siteUrl, pageUrl);
+      return {
+        content: [{ type: "text", text: JSON.stringify(results, null, 2) }]
+      };
+    } catch (error) {
+      return formatError(error);
+    }
+  }
+);
+
+server.tool(
+  "bing_get_top_queries",
+  "Alias for bing_analytics_query. Get top queries for a site.",
+  {
+    siteUrl: z.string().describe("The URL of the site")
+  },
+  async ({ siteUrl }) => {
+    try {
+      const results = await bingAnalytics.getQueryStats(siteUrl);
+      return {
+        content: [{ type: "text", text: JSON.stringify(results, null, 2) }]
+      };
+    } catch (error) {
+      return formatError(error);
+    }
+  }
+);
+
+server.tool(
+  "bing_get_top_pages",
+  "Alias for bing_analytics_page. Get top pages for a site.",
+  {
+    siteUrl: z.string().describe("The URL of the site")
+  },
+  async ({ siteUrl }) => {
+    try {
+      const results = await bingAnalytics.getPageStats(siteUrl);
+      return {
+        content: [{ type: "text", text: JSON.stringify(results, null, 2) }]
+      };
+    } catch (error) {
+      return formatError(error);
+    }
+  }
+);
+
+server.tool(
+  "bing_analytics_query_page",
+  "Get combined query and page performance stats for a site",
+  {
+    siteUrl: z.string().describe("The URL of the site")
+  },
+  async ({ siteUrl }) => {
+    try {
+      const results = await bingAnalytics.getQueryPageStats(siteUrl);
+      return {
+        content: [{ type: "text", text: JSON.stringify(results, null, 2) }]
+      };
+    } catch (error) {
+      return formatError(error);
+    }
+  }
+);
+
+server.tool(
+  "bing_rank_traffic_stats",
+  "Get historical rank and traffic statistics for a site",
+  {
+    siteUrl: z.string().describe("The URL of the site")
+  },
+  async ({ siteUrl }) => {
+    try {
+      const results = await bingAnalytics.getRankAndTrafficStats(siteUrl);
+      return {
+        content: [{ type: "text", text: JSON.stringify(results, null, 2) }]
+      };
+    } catch (error) {
+      return formatError(error);
+    }
+  }
+);
+
+server.tool(
+  "bing_keywords_stats",
+  "Get historical stats for a keyword in Bing",
+  {
+    q: z.string().describe("The keyword to research"),
+    country: z.string().optional().describe("Optional country code (e.g., US)"),
+    language: z.string().optional().describe("Optional language code (e.g., en-US)")
+  },
+  async ({ q, country, language }) => {
+    try {
+      const results = await bingKeywords.getKeywordStats(q, country, language);
+      return {
+        content: [{ type: "text", text: JSON.stringify(results, null, 2) }]
+      };
+    } catch (error) {
+      return formatError(error);
+    }
+  }
+);
+
+server.tool(
+  "bing_related_keywords",
+  "Get related keywords and search volume from Bing",
+  {
+    q: z.string().describe("The keyword to research"),
+    country: z.string().optional().describe("Optional country code (e.g., US)"),
+    language: z.string().optional().describe("Optional language code (e.g., en-US)")
+  },
+  async ({ q, country, language }) => {
+    try {
+      const results = await bingKeywords.getRelatedKeywords(q, country, language);
+      return {
+        content: [{ type: "text", text: JSON.stringify(results, null, 2) }]
+      };
+    } catch (error) {
+      return formatError(error);
+    }
+  }
+);
+
+server.tool(
+  "bing_crawl_issues",
+  "Get crawl issues for a site from Bing Webmaster Tools",
+  {
+    siteUrl: z.string().describe("The URL of the site")
+  },
+  async ({ siteUrl }) => {
+    try {
+      const results = await bingCrawl.getCrawlIssues(siteUrl);
+      return {
+        content: [{ type: "text", text: JSON.stringify(results, null, 2) }]
+      };
+    } catch (error) {
+      return formatError(error);
+    }
+  }
+);
+
+server.tool(
+  "bing_crawl_stats",
+  "Get crawl statistics (indexed, crawled, errors) for a site",
+  {
+    siteUrl: z.string().describe("The URL of the site")
+  },
+  async ({ siteUrl }) => {
+    try {
+      const results = await bingCrawl.getCrawlStats(siteUrl);
+      return {
+        content: [{ type: "text", text: JSON.stringify(results, null, 2) }]
+      };
+    } catch (error) {
+      return formatError(error);
+    }
+  }
+);
+
+server.tool(
+  "bing_url_submission_quota",
+  "Get remaining URL submission quota for Bing",
+  {
+    siteUrl: z.string().describe("The URL of the site")
+  },
+  async ({ siteUrl }) => {
+    try {
+      const result = await bingUrlSubmission.getUrlSubmissionQuota(siteUrl);
+      return {
+        content: [{ type: "text", text: JSON.stringify(result, null, 2) }]
+      };
+    } catch (error) {
+      return formatError(error);
+    }
+  }
+);
+
+server.tool(
+  "bing_url_submit",
+  "Submit a single URL to Bing for indexing",
+  {
+    siteUrl: z.string().describe("The URL of the site"),
+    url: z.string().describe("The specific URL to submit")
+  },
+  async ({ siteUrl, url }) => {
+    try {
+      const result = await bingUrlSubmission.submitUrl(siteUrl, url);
+      return {
+        content: [{ type: "text", text: result }]
+      };
+    } catch (error) {
+      return formatError(error);
+    }
+  }
+);
+
+server.tool(
+  "bing_url_submit_batch",
+  "Submit multiple URLs to Bing for indexing in a single batch",
+  {
+    siteUrl: z.string().describe("The URL of the site"),
+    urlList: z.array(z.string()).describe("List of URLs to submit (max 500)")
+  },
+  async ({ siteUrl, urlList }) => {
+    try {
+      const result = await bingUrlSubmission.submitUrlBatch(siteUrl, urlList);
+      return {
+        content: [{ type: "text", text: result }]
+      };
+    } catch (error) {
+      return formatError(error);
+    }
+  }
+);
+
+server.tool(
+  "bing_index_now",
+  "Submit URLs via IndexNow API (Bing, Yandex, etc.)",
+  {
+    host: z.string().describe("The host/domain where URLs are located (e.g., www.example.com)"),
+    key: z.string().describe("The IndexNow key generated for this host"),
+    keyLocation: z.string().optional().describe("Optional URL of the key file (if not at host root)"),
+    urlList: z.array(z.string()).describe("List of absolute URLs to notify IndexNow about")
+  },
+  async (options) => {
+    try {
+      const result = await indexNow.submitIndexNow(options);
+      return {
+        content: [{ type: "text", text: result }]
+      };
+    } catch (error) {
+      return formatError(error);
+    }
+  }
+);
+
+server.tool(
+  "bing_sites_health",
+  "Run a comprehensive health check on one or all verified Bing sites",
+  {
+    siteUrl: z.string().optional().describe("Optional URL of a specific site to check")
+  },
+  async ({ siteUrl }) => {
+    try {
+      const results = await bingHealth.healthCheck(siteUrl);
+      return {
+        content: [{ type: "text", text: JSON.stringify(results, null, 2) }]
+      };
+    } catch (error) {
+      return formatError(error);
+    }
+  }
+);
+
+server.tool(
+  "bing_opportunity_finder",
+  "Find high-potential 'low-hanging fruit' keywords in Bing",
+  {
+    siteUrl: z.string().describe("The URL of the site"),
+    minImpressions: z.number().optional().describe("Minimum impressions threshold (default 100)")
+  },
+  async ({ siteUrl, minImpressions }) => {
+    try {
+      const results = await bingSeoInsights.findLowHangingFruit(siteUrl, { minImpressions });
+      return {
+        content: [{ type: "text", text: JSON.stringify(results, null, 2) }]
+      };
+    } catch (error) {
+      return formatError(error);
+    }
+  }
+);
+
+server.tool(
+  "bing_seo_recommendations",
+  "Generate prioritized SEO recommendations for a Bing site",
+  {
+    siteUrl: z.string().describe("The URL of the site")
+  },
+  async ({ siteUrl }) => {
+    try {
+      const results = await bingSeoInsights.generateRecommendations(siteUrl);
+      return {
+        content: [{ type: "text", text: JSON.stringify(results, null, 2) }]
+      };
+    } catch (error) {
+      return formatError(error);
+    }
+  }
+);
+
+server.tool(
+  "bing_striking_distance",
+  "Find keywords ranking positions 8-15 on Bing (near page 1)",
+  {
+    siteUrl: z.string().describe("The URL of the site")
+  },
+  async ({ siteUrl }) => {
+    try {
+      const results = await bingSeoInsights.findStrikingDistance(siteUrl);
+      return {
+        content: [{ type: "text", text: JSON.stringify(results, null, 2) }]
+      };
+    } catch (error) {
+      return formatError(error);
+    }
+  }
+);
+
+server.tool(
+  "bing_low_ctr_opportunities",
+  "Identify high-ranking Bing queries with lower than expected CTR",
+  {
+    siteUrl: z.string().describe("The URL of the site"),
+    minImpressions: z.number().optional().describe("Minimum impressions threshold (default 500)")
+  },
+  async ({ siteUrl, minImpressions }) => {
+    try {
+      const results = await bingSeoInsights.findLowCTROpportunities(siteUrl, { minImpressions });
+      return {
+        content: [{ type: "text", text: JSON.stringify(results, null, 2) }]
+      };
+    } catch (error) {
+      return formatError(error);
+    }
+  }
+);
+
+server.tool(
+  "bing_url_info",
+  "Get detailed indexing and crawl information for a URL in Bing",
+  {
+    siteUrl: z.string().describe("The site URL"),
+    url: z.string().describe("The specific URL to inspect")
+  },
+  async ({ siteUrl, url }) => {
+    try {
+      const result = await bingInspection.getUrlInfo(siteUrl, url);
+      return {
+        content: [{ type: "text", text: JSON.stringify(result, null, 2) }]
+      };
+    } catch (error) {
+      return formatError(error);
+    }
+  }
+);
+
+server.tool(
+  "bing_link_counts",
+  "Get inbound link counts for a site from Bing",
+  {
+    siteUrl: z.string().describe("The URL of the site")
+  },
+  async ({ siteUrl }) => {
+    try {
+      const results = await bingLinks.getLinkCounts(siteUrl);
+      return {
+        content: [{ type: "text", text: JSON.stringify(results, null, 2) }]
+      };
+    } catch (error) {
+      return formatError(error);
+    }
+  }
+);
+
+server.tool(
+  "bing_analytics_detect_anomalies",
+  "Detect performance anomalies in Bing traffic",
+  {
+    siteUrl: z.string().describe("The URL of the site"),
+    days: z.number().optional().describe("Number of days to check (default 14)"),
+    threshold: z.number().optional().describe("Anomaly threshold (default 2.5)")
+  },
+  async ({ siteUrl, days, threshold }) => {
+    try {
+      const results = await bingAnalytics.detectAnomalies(siteUrl, { days, threshold });
+      return {
+        content: [{ type: "text", text: JSON.stringify(results, null, 2) }]
+      };
+    } catch (error) {
+      return formatError(error);
+    }
+  }
+);
+
+server.tool(
+  "bing_analytics_compare_periods",
+  "Compare performance between two date ranges in Bing",
+  {
+    siteUrl: z.string().describe("The URL of the site"),
+    startDate1: z.string().describe("Start date of period 1 (YYYY-MM-DD)"),
+    endDate1: z.string().describe("End date of period 1 (YYYY-MM-DD)"),
+    startDate2: z.string().describe("Start date of period 2 (YYYY-MM-DD)"),
+    endDate2: z.string().describe("End date of period 2 (YYYY-MM-DD)")
+  },
+  async ({ siteUrl, startDate1, endDate1, startDate2, endDate2 }) => {
+    try {
+      const result = await bingAnalytics.comparePeriods(siteUrl, startDate1, endDate1, startDate2, endDate2);
+      return {
+        content: [{ type: "text", text: JSON.stringify(result, null, 2) }]
+      };
+    } catch (error) {
+      return formatError(error);
+    }
+  }
+);
+
+server.tool(
+  "bing_analytics_drop_attribution",
+  "Identify the likely cause of a Bing traffic drop",
+  {
+    siteUrl: z.string().describe("The URL of the site"),
+    days: z.number().optional().describe("Lookback period in days (default 30)"),
+    threshold: z.number().optional().describe("Anomaly threshold (default 2.0)")
+  },
+  async ({ siteUrl, days, threshold }) => {
+    try {
+      const result = await bingAdvancedAnalytics.analyzeDropAttribution(siteUrl, { days, threshold });
+      return {
+        content: [{ type: "text", text: JSON.stringify(result, null, 2) }]
+      };
+    } catch (error) {
+      return formatError(error);
+    }
+  }
+);
+
+server.tool(
+  "bing_analytics_time_series",
+  "Advanced time series analysis for Bing performance data",
+  {
+    siteUrl: z.string().describe("The URL of the site"),
+    days: z.number().optional().describe("Number of days (default 60)"),
+    granularity: z.enum(["daily", "weekly"]).optional().describe("Data granularity"),
+    metrics: z.array(z.enum(["clicks", "impressions", "ctr", "position"])).optional().describe("Metrics to analyze")
+  },
+  async ({ siteUrl, days, granularity, metrics }) => {
+    try {
+      const result = await bingAdvancedAnalytics.getTimeSeriesInsights(siteUrl, { days, granularity, metrics });
+      return {
+        content: [{ type: "text", text: JSON.stringify(result, null, 2) }]
+      };
+    } catch (error) {
+      return formatError(error);
+    }
+  }
+);
 server.resource(
   "sites",
   "sites://list",
@@ -813,7 +1379,7 @@ server.resource(
 );
 
 // Documentation Resources
-import { dimensionsDocs, filtersDocs, searchTypesDocs, patternsDocs, algorithmUpdatesDocs } from "./docs/index.js";
+import { dimensionsDocs, filtersDocs, searchTypesDocs, patternsDocs, algorithmUpdatesDocs } from "./google/docs/index.js";
 
 server.resource(
   "docs-dimensions",
@@ -870,6 +1436,91 @@ server.resource(
     contents: [{
       uri: uri.href,
       text: algorithmUpdatesDocs,
+      mimeType: "text/markdown"
+    }]
+  })
+);
+
+server.resource(
+  "docs-bing-api",
+  "docs://bing-api",
+  async (uri) => ({
+    contents: [{
+      uri: uri.href,
+      text: bingApiDocs,
+      mimeType: "text/markdown"
+    }]
+  })
+);
+
+server.resource(
+  "docs-index-now",
+  "docs://index-now",
+  async (uri) => ({
+    contents: [{
+      uri: uri.href,
+      text: indexNowDocs,
+      mimeType: "text/markdown"
+    }]
+  })
+);
+
+
+server.resource(
+  "docs-bing-dimensions",
+  "docs://bing/dimensions",
+  async (uri) => ({
+    contents: [{
+      uri: uri.href,
+      text: bingDimensionsDocs,
+      mimeType: "text/markdown"
+    }]
+  })
+);
+
+server.resource(
+  "docs-bing-filters",
+  "docs://bing/filters",
+  async (uri) => ({
+    contents: [{
+      uri: uri.href,
+      text: bingFiltersDocs,
+      mimeType: "text/markdown"
+    }]
+  })
+);
+
+server.resource(
+  "docs-bing-search-types",
+  "docs://bing/search-types",
+  async (uri) => ({
+    contents: [{
+      uri: uri.href,
+      text: bingSearchTypesDocs,
+      mimeType: "text/markdown"
+    }]
+  })
+);
+
+server.resource(
+  "docs-bing-patterns",
+  "docs://bing/patterns",
+  async (uri) => ({
+    contents: [{
+      uri: uri.href,
+      text: bingPatternsDocs,
+      mimeType: "text/markdown"
+    }]
+  })
+);
+
+server.resource(
+  "docs-bing-algorithm-updates",
+  "docs://bing/algorithm-updates",
+  async (uri) => ({
+    contents: [{
+      uri: uri.href,
+      text: bingAlgorithmUpdatesDocs,
       mimeType: "text/markdown"
     }]
   })
