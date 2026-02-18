@@ -1,10 +1,7 @@
 {
   "name": "Search Console MCP",
   "theme": "mint",
-  "logo": {
-    "light": "/logo/light.svg",
-    "dark": "/logo/dark.svg"
-  },
+  "logo": "/images/search-console-mcp-logo.png",
   "favicon": "/favicon.png",
   "colors": {
     "primary": "#4F46E5",
