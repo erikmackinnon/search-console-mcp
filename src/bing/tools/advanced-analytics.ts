@@ -1,4 +1,5 @@
 import { detectAnomalies, BingAnomaly as AnomalyItem, getRankAndTrafficStats } from './analytics.js';
+import { BingRankAndTrafficStats } from '../client.js';
 
 /**
  * Result of a traffic drop attribution analysis.
@@ -169,7 +170,12 @@ export async function getTimeSeriesInsights(
     const filteredRows = rows.slice(startIndex, endIndex);
 
     // Handle data parsing and grouping
-    let data = filteredRows.map(r => {
+    let data: {
+        date: string;
+        dimensions: Record<string, string>;
+        metrics: Record<string, number>;
+        original?: BingRankAndTrafficStats;
+    }[] = filteredRows.map(r => {
         const dimObj: Record<string, string> = { date: r.Date };
         const metricObj: Record<string, number> = {};
 
@@ -202,9 +208,10 @@ export async function getTimeSeriesInsights(
 
         data.forEach(d => {
             const date = new Date(d.date);
-            const day = date.getDay();
-            const diff = date.getDate() - day + (day === 0 ? -6 : 1); // Adjust to Monday
-            const monday = new Date(date.setDate(diff));
+            const day = date.getUTCDay();
+            const diff = date.getUTCDate() - day + (day === 0 ? -6 : 1); // Adjust to Monday
+            const monday = new Date(date);
+            monday.setUTCDate(diff);
             const weekKey = monday.toISOString().split('T')[0];
 
             if (!weeklyData[weekKey]) {
@@ -220,7 +227,7 @@ export async function getTimeSeriesInsights(
 
             // Accumulate raw values
             const entry = weeklyData[weekKey];
-            const r = d.original;
+            const r = d.original!;
             entry.accumulators.clicks += r.Clicks;
             entry.accumulators.impressions += r.Impressions;
             entry.accumulators.weightedPos += (r.AvgPosition * r.Impressions);
