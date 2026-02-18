@@ -16,12 +16,8 @@ import {
 } from '../src/bing/tools/seo-insights.js';
 import * as bingSites from '../src/bing/tools/sites.js';
 
-// Mock undici fetch
-vi.mock('undici', () => ({
-    fetch: vi.fn(),
-}));
-
-import { fetch } from 'undici';
+const fetch = vi.fn();
+global.fetch = fetch as any;
 
 describe('Bing Advanced Tools', () => {
     beforeEach(() => {

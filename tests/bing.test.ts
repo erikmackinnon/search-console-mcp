@@ -6,12 +6,8 @@ import { getCrawlIssues } from '../src/bing/tools/crawl.js';
 import { getUrlSubmissionQuota, submitUrl, submitUrlBatch } from '../src/bing/tools/url-submission.js';
 import { submitSitemap, listSitemaps } from '../src/bing/tools/sitemaps.js';
 
-// Mock undici fetch
-vi.mock('undici', () => ({
-    fetch: vi.fn(),
-}));
-
-import { fetch } from 'undici';
+const fetch = vi.fn();
+global.fetch = fetch as any;
 
 describe('Bing Tools', () => {
     beforeEach(() => {

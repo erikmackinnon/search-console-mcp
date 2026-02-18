@@ -1,5 +1,3 @@
-import { fetch } from 'undici';
-
 export interface IndexNowPayload {
     host: string;
     key: string;

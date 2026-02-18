@@ -92,15 +92,14 @@ export async function comparePeriods(
 
         const clicks = filtered.reduce((acc: number, row: BingRankAndTrafficStats) => acc + row.Clicks, 0);
         const impressions = filtered.reduce((acc: number, row: BingRankAndTrafficStats) => acc + row.Impressions, 0);
-        const avgPos = filtered.length > 0
-            ? filtered.reduce((acc: number, row: BingRankAndTrafficStats) => acc + row.AvgPosition, 0) / filtered.length
-            : 0;
+        const weightedPosSum = filtered.reduce((acc: number, row: BingRankAndTrafficStats) => acc + (row.AvgPosition * row.Impressions), 0);
+        const avgPos = impressions > 0 ? weightedPosSum / impressions : 0;
 
         return {
             clicks,
             impressions,
             ctr: impressions > 0 ? clicks / impressions : 0,
-            position: avgPos,
+            position: parseFloat(avgPos.toFixed(2)),
             startDate: start,
             endDate: end
         };
