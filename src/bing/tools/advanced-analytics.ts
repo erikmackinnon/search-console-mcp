@@ -144,7 +144,9 @@ export async function getTimeSeriesInsights(
     // Bing API via getRankAndTrafficStats only supports date dimension implicitly
     const dimensions = ['date'];
 
-    const rows = await getRankAndTrafficStats(siteUrl);
+    const rawRows = await getRankAndTrafficStats(siteUrl);
+    // Sort rows by date ascending
+    const rows = rawRows.sort((a, b) => new Date(a.Date).getTime() - new Date(b.Date).getTime());
 
     // Filter by date range if provided
     let startIndex = 0;
@@ -152,12 +154,14 @@ export async function getTimeSeriesInsights(
 
     if (options.startDate) {
         startIndex = rows.findIndex(r => r.Date >= options.startDate!);
-        if (startIndex === -1) startIndex = 0;
+        // If no date is >= startDate, then all dates are < startDate (since sorted ascending)
+        if (startIndex === -1) startIndex = rows.length;
     } else if (options.days) {
         startIndex = Math.max(0, rows.length - options.days);
     }
 
     if (options.endDate) {
+        // find index where date > endDate
         endIndex = rows.findIndex(r => r.Date > options.endDate!);
         if (endIndex === -1) endIndex = rows.length;
     }
@@ -182,13 +186,20 @@ export async function getTimeSeriesInsights(
         return {
             date: r.Date,
             dimensions: dimObj,
-            metrics: metricObj
+            metrics: metricObj,
+            original: r // keep original for advanced aggregation
         };
     }).sort((a, b) => a.date.localeCompare(b.date));
 
     // Support weekly granularity
     if (granularity === 'weekly') {
-        const weeklyData: Record<string, typeof data[0]> = {};
+        const weeklyData: Record<string, {
+            date: string;
+            dimensions: any;
+            metrics: any;
+            accumulators: { clicks: number; impressions: number; weightedPos: number; count: number; };
+        }> = {};
+
         data.forEach(d => {
             const date = new Date(d.date);
             const day = date.getDay();
@@ -202,39 +213,43 @@ export async function getTimeSeriesInsights(
                 weeklyData[weekKey] = {
                     date: weekKey,
                     dimensions: d.dimensions,
-                    metrics: initMetrics
+                    metrics: initMetrics,
+                    accumulators: { clicks: 0, impressions: 0, weightedPos: 0, count: 0 }
                 };
             }
 
-            // Accumulate metrics (sum for clicks/imps, avg for ctr/pos)
-            metrics.forEach(m => {
-                if (m === 'position' || m === 'ctr') {
-                    // Weighted average would be better but simple average for now
-                    // Or keep sum and divide later? Let's do running sum and then divide by 7 usually?
-                    // But here we are iterating days. 
-                    // Let's store sum and count? 
-                    // Simplified: just average per day contribution
-                    // This is slightly inaccurate for CTR/Pos but acceptable for basic summary
-                    weeklyData[weekKey].metrics[m] += d.metrics[m];
-                } else {
-                    weeklyData[weekKey].metrics[m] += d.metrics[m];
-                }
-            });
+            // Accumulate raw values
+            const entry = weeklyData[weekKey];
+            const r = d.original;
+            entry.accumulators.clicks += r.Clicks;
+            entry.accumulators.impressions += r.Impressions;
+            entry.accumulators.weightedPos += (r.AvgPosition * r.Impressions);
+            entry.accumulators.count += 1;
         });
 
-        // Fix averages
-        Object.values(weeklyData).forEach(w => {
-            metrics.forEach(m => {
-                if (m === 'position' || m === 'ctr') {
-                    // We summed daily averages/CTRs. Dividing by 7 is rough approximation if data is complete.
-                    // Better: count days. But for now let's just use the summed value / number of days data present for that week?
-                    // Let's assume 7 days roughly.
-                    w.metrics[m] = w.metrics[m] / 7;
-                }
-            });
-        });
+        // Compute final weekly metrics
+        data = Object.values(weeklyData).map(w => {
+            const m = w.metrics;
+            const acc = w.accumulators;
 
-        data = Object.values(weeklyData).sort((a, b) => a.date.localeCompare(b.date));
+            const finalClicks = acc.clicks;
+            const finalImpressions = acc.impressions;
+            const finalCtr = finalImpressions > 0 ? finalClicks / finalImpressions : 0;
+            const finalPos = finalImpressions > 0 ? acc.weightedPos / finalImpressions : 0;
+
+            metrics.forEach(metric => {
+                if (metric === 'clicks') m[metric] = finalClicks;
+                else if (metric === 'impressions') m[metric] = finalImpressions;
+                else if (metric === 'ctr') m[metric] = finalCtr;
+                else if (metric === 'position') m[metric] = parseFloat(finalPos.toFixed(2));
+            });
+
+            return {
+                date: w.date,
+                dimensions: w.dimensions,
+                metrics: m
+            };
+        }).sort((a, b) => a.date.localeCompare(b.date));
     }
 
     // 1. Calculate Rolling Averages for EACH metric
