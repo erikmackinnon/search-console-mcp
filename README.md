@@ -29,7 +29,7 @@ A Model Context Protocol (MCP) server that transforms how you interact with Goog
 
 Copy and paste these into your MCP client (Claude Desktop, etc.) to see the intelligence engine in action:
 
-#### �️ The Traffic Detective
+#### 🔍 The Traffic Detective
 > "My traffic dropped this week compared to last. Use the anomaly detection and time-series tools to find exactly when the drop started and which pages are responsible."
 
 #### 🎯 The "Striking Distance" Hunter
