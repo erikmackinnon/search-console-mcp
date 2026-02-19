@@ -158,5 +158,5 @@ These are low-level tools designed to be used by other AI agents to build comple
 
 ## License
 
-[MIT](LICENSE.md)
+[MIT](LICENSE)
 [Contributing](CONTRIBUTING.md)
