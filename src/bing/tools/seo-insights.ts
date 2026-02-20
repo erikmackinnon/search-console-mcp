@@ -111,6 +111,65 @@ export async function findLowCTROpportunities(
 }
 
 /**
+ * Detect keyword cannibalization in Bing where multiple pages compete for the same query.
+ */
+export async function detectCannibalization(
+    siteUrl: string,
+    options: { minImpressions?: number; limit?: number } = {}
+): Promise<any[]> {
+    const { minImpressions = 50, limit = 30 } = options;
+
+    const rows = await getQueryPageStats(siteUrl);
+
+    // Group by query
+    const queryMap = new Map<string, any[]>();
+
+    for (const row of rows) {
+        if (row.Impressions < minImpressions) continue;
+
+        if (!queryMap.has(row.Query)) {
+            queryMap.set(row.Query, []);
+        }
+
+        queryMap.get(row.Query)!.push({
+            page: row.Page,
+            clicks: row.Clicks,
+            impressions: row.Impressions,
+            date: row.Date
+        });
+    }
+
+    const cannibalization: any[] = [];
+
+    for (const [query, pages] of queryMap) {
+        if (pages.length >= 2) {
+            pages.sort((a, b) => b.clicks - a.clicks);
+            const totalClicks = pages.reduce((sum, p) => sum + p.clicks, 0);
+            const totalImpressions = pages.reduce((sum, p) => sum + p.impressions, 0);
+
+            // Calculate conflict score
+            const shares = pages.map(p => totalClicks > 0 ? p.clicks / totalClicks : 0);
+            const hhi = shares.reduce((sum, s) => sum + s * s, 0);
+            const conflictScore = 1 - hhi;
+
+            if (conflictScore > 0.1 || pages[1].impressions > (pages[0].impressions * 0.2)) {
+                cannibalization.push({
+                    query,
+                    pages,
+                    totalClicks,
+                    totalImpressions,
+                    clickShareConflict: parseFloat(conflictScore.toFixed(2))
+                });
+            }
+        }
+    }
+
+    return cannibalization
+        .sort((a, b) => (b.totalClicks * b.clickShareConflict) - (a.totalClicks * a.clickShareConflict))
+        .slice(0, limit);
+}
+
+/**
  * Generate prioritized Bing SEO recommendations.
  */
 export async function generateRecommendations(
@@ -118,10 +177,11 @@ export async function generateRecommendations(
 ): Promise<BingSEOInsight[]> {
     const insights: BingSEOInsight[] = [];
 
-    const [lowHangingFruit, strikingDistance, lowCTR] = await Promise.all([
+    const [lowHangingFruit, strikingDistance, lowCTR, cannibalization] = await Promise.all([
         findLowHangingFruit(siteUrl, { limit: 10 }),
         findStrikingDistance(siteUrl, { limit: 10 }),
-        findLowCTROpportunities(siteUrl, { limit: 10 })
+        findLowCTROpportunities(siteUrl, { limit: 10 }),
+        detectCannibalization(siteUrl, { limit: 10 })
     ]);
 
     if (lowHangingFruit.length > 0) {
@@ -144,6 +204,17 @@ export async function generateRecommendations(
             description: `You rank on page 1 but get fewer clicks than expected. Consider improving titles and meta descriptions.`,
             priority: 'medium',
             data: { topQueries: lowCTR.slice(0, 5).map(q => q.Query) }
+        });
+    }
+
+    if (cannibalization.length > 0) {
+        insights.push({
+            type: 'warning',
+            category: 'Content',
+            title: `${cannibalization.length} Bing Cannibalization Issues`,
+            description: `Multiple pages are competing for the same keywords in Bing. Consider consolidating content.`,
+            priority: 'medium',
+            data: { topIssues: cannibalization.slice(0, 3).map(c => c.query) }
         });
     }
 
