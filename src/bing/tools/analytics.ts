@@ -185,3 +185,34 @@ export async function detectAnomalies(
 
     return anomalies;
 }
+
+/**
+ * Get aggregate performance summary for a Bing site for the last N days.
+ */
+export async function getPerformanceSummary(siteUrl: string, days = 28): Promise<PerformanceSummary> {
+    const stats = await getRankAndTrafficStats(siteUrl);
+
+    // Bing typically has historical data; filter for last N days
+    const endDate = new Date();
+    const startDate = new Date();
+    startDate.setDate(endDate.getDate() - days);
+
+    const filtered = stats.filter((row: BingRankAndTrafficStats) => {
+        const d = new Date(row.Date);
+        return d >= startDate && d <= endDate;
+    });
+
+    const clicks = filtered.reduce((acc: number, row: BingRankAndTrafficStats) => acc + row.Clicks, 0);
+    const impressions = filtered.reduce((acc: number, row: BingRankAndTrafficStats) => acc + row.Impressions, 0);
+    const weightedPosSum = filtered.reduce((acc: number, row: BingRankAndTrafficStats) => acc + (row.AvgPosition * row.Impressions), 0);
+    const avgPos = impressions > 0 ? weightedPosSum / impressions : 0;
+
+    return {
+        clicks,
+        impressions,
+        ctr: impressions > 0 ? clicks / impressions : 0,
+        position: parseFloat(avgPos.toFixed(2)),
+        startDate: startDate.toISOString().split('T')[0],
+        endDate: endDate.toISOString().split('T')[0]
+    };
+}

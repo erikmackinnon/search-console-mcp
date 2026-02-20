@@ -12,6 +12,8 @@ export interface RankingBucketResult {
     position: number;
     /** The category name for the ranking range. */
     bucket: 'Top 3' | 'Page 1 (4-10)' | 'Page 2 (11-20)' | 'Page 3+' | 'Unranked';
+    /** The search engine this data originates from. */
+    engine?: 'google' | 'bing';
 }
 
 /**
@@ -28,6 +30,8 @@ export interface TrafficDeltaResult {
     percentChange: number;
     /** A semantic status indicating the direction of change. */
     status: 'increased' | 'decreased' | 'unchanged' | 'new' | 'lost';
+    /** The search engine this data originates from. */
+    engine?: 'google' | 'bing';
 }
 
 /**
@@ -40,6 +44,8 @@ export interface BrandQueryResult {
     isBrand: boolean;
     /** The regex pattern that matched, if any. */
     matchedPattern?: string;
+    /** The search engine this data originates from. */
+    engine?: 'google' | 'bing';
 }
 
 /**
@@ -58,6 +64,8 @@ export interface CannibalizationCheckResult {
     overlapScore: number;
     /** A human-readable recommendation for resolving the conflict. */
     recommendation: string;
+    /** The search engine this data originates from. */
+    engine?: 'google' | 'bing';
 }
 
 /**
@@ -66,7 +74,7 @@ export interface CannibalizationCheckResult {
  * @param position - The average ranking position.
  * @returns The categorized bucket result.
  */
-export function getRankingBucket(position: number): RankingBucketResult {
+export function getRankingBucket(position: number, engine?: 'google' | 'bing'): RankingBucketResult {
     let bucket: RankingBucketResult['bucket'];
 
     if (position <= 0) bucket = 'Unranked';
@@ -75,7 +83,7 @@ export function getRankingBucket(position: number): RankingBucketResult {
     else if (position <= 20) bucket = 'Page 2 (11-20)';
     else bucket = 'Page 3+';
 
-    return { position, bucket };
+    return { position, bucket, engine };
 }
 
 /**
@@ -85,7 +93,7 @@ export function getRankingBucket(position: number): RankingBucketResult {
  * @param previous - The baseline metric value.
  * @returns A detailed delta result including status.
  */
-export function calculateTrafficDelta(current: number, previous: number): TrafficDeltaResult {
+export function calculateTrafficDelta(current: number, previous: number, engine?: 'google' | 'bing'): TrafficDeltaResult {
     const absoluteChange = current - previous;
     let percentChange = 0;
     let status: TrafficDeltaResult['status'];
@@ -106,7 +114,7 @@ export function calculateTrafficDelta(current: number, previous: number): Traffi
         else status = 'unchanged';
     }
 
-    return { current, previous, absoluteChange, percentChange, status };
+    return { current, previous, absoluteChange, percentChange, status, engine };
 }
 
 /**
@@ -116,12 +124,13 @@ export function calculateTrafficDelta(current: number, previous: number): Traffi
  * @param brandRegexString - The regex string to use for matching.
  * @returns A brand detection result.
  */
-export function isBrandQuery(query: string, brandRegexString: string): BrandQueryResult {
+export function isBrandQuery(query: string, brandRegexString: string, engine?: 'google' | 'bing'): BrandQueryResult {
     const isBrand = safeTest(brandRegexString, 'i', query);
     return {
         query,
         isBrand,
-        matchedPattern: isBrand ? brandRegexString : undefined
+        matchedPattern: isBrand ? brandRegexString : undefined,
+        engine
     };
 }
 
@@ -135,8 +144,8 @@ export function isBrandQuery(query: string, brandRegexString: string): BrandQuer
  */
 export function isCannibalized(
     query: string,
-    pageA: { position: number; impressions: number; clicks: number },
-    pageB: { position: number; impressions: number; clicks: number }
+    pageA: { position: number; impressions: number; clicks: number; engine?: 'google' | 'bing' },
+    pageB: { position: number; impressions: number; clicks: number; engine?: 'google' | 'bing' }
 ): CannibalizationCheckResult {
     // 1. Position proximity: Are ranks close? (e.g. Pos 5 vs Pos 6 is high conflict, Pos 1 vs Pos 50 is low)
     const posDiff = Math.abs(pageA.position - pageB.position);
@@ -170,6 +179,7 @@ export function isCannibalized(
         pageB: "Page B",
         isCannibalized,
         overlapScore,
-        recommendation
+        recommendation,
+        engine: pageA.engine // Use engine from pageA if available
     };
 }

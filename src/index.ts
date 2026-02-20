@@ -47,13 +47,13 @@ const server = new McpServer({
 // Sites Tools
 server.tool(
   "sites_list",
-  "List all sites in Search Console",
-  {},
-  async () => {
+  "List all verified sites",
+  { engine: z.enum(["google", "bing"]).optional().describe("The search engine (default: google)") },
+  async ({ engine = "google" }) => {
     try {
-      const result = await sites.listSites();
+      const results = engine === "google" ? await sites.listSites() : await bingSites.listSites();
       return {
-        content: [{ type: "text", text: JSON.stringify(result, null, 2) }]
+        content: [{ type: "text", text: JSON.stringify(results, null, 2) }]
       };
     } catch (error) {
       return formatError(error);
@@ -63,11 +63,14 @@ server.tool(
 
 server.tool(
   "sites_add",
-  "Add a website to Search Console",
-  { siteUrl: z.string().describe("The URL of the site to add (e.g., 'https://example.com' or 'sc-domain:example.com')") },
-  async ({ siteUrl }) => {
+  "Add a new site to Search Console or Bing Webmaster Tools",
+  {
+    siteUrl: z.string().describe("The URL of the site to add"),
+    engine: z.enum(["google", "bing"]).optional().describe("The search engine (default: google)")
+  },
+  async ({ siteUrl, engine = "google" }) => {
     try {
-      const result = await sites.addSite(siteUrl);
+      const result = engine === "google" ? await sites.addSite(siteUrl) : await bingSites.addSite(siteUrl);
       return {
         content: [{ type: "text", text: result }]
       };
@@ -79,11 +82,14 @@ server.tool(
 
 server.tool(
   "sites_delete",
-  "Remove a website from Search Console",
-  { siteUrl: z.string().describe("The URL of the site to delete") },
-  async ({ siteUrl }) => {
+  "Remove a site from Search Console or Bing Webmaster Tools",
+  {
+    siteUrl: z.string().describe("The URL of the site to delete"),
+    engine: z.enum(["google", "bing"]).optional().describe("The search engine (default: google)")
+  },
+  async ({ siteUrl, engine = "google" }) => {
     try {
-      const result = await sites.deleteSite(siteUrl);
+      const result = engine === "google" ? await sites.deleteSite(siteUrl) : await bingSites.removeSite(siteUrl);
       return {
         content: [{ type: "text", text: result }]
       };
@@ -111,13 +117,16 @@ server.tool(
 
 server.tool(
   "sites_health_check",
-  "Run a health check on one or all verified sites. Checks week-over-week performance, sitemap status, and traffic anomalies. Returns a structured report with an overall status (healthy/warning/critical) per site.",
+  "Run a health check on one or all verified sites. Checks performance trends and status.",
   {
-    siteUrl: z.string().optional().describe("Optional. The URL of a specific site to check. If omitted, checks all verified sites.")
+    siteUrl: z.string().optional().describe("Optional. The URL of a specific site to check."),
+    engine: z.enum(["google", "bing"]).optional().describe("The search engine (default: google)")
   },
-  async ({ siteUrl }) => {
+  async ({ siteUrl, engine = "google" }) => {
     try {
-      const result = await sitesHealth.healthCheck(siteUrl);
+      const result = engine === "google"
+        ? await sitesHealth.healthCheck(siteUrl)
+        : await bingHealth.healthCheck(siteUrl);
       return {
         content: [{ type: "text", text: JSON.stringify(result, null, 2) }]
       };
@@ -131,12 +140,15 @@ server.tool(
 server.tool(
   "sitemaps_list",
   "List sitemaps for a site",
-  { siteUrl: z.string().describe("The URL of the site") },
-  async ({ siteUrl }) => {
+  {
+    siteUrl: z.string().describe("The URL of the site"),
+    engine: z.enum(["google", "bing"]).optional().describe("The search engine (default: google)")
+  },
+  async ({ siteUrl, engine = "google" }) => {
     try {
-      const result = await sitemaps.listSitemaps(siteUrl);
+      const results = engine === "google" ? await sitemaps.listSitemaps(siteUrl) : await bingSitemaps.listSitemaps(siteUrl);
       return {
-        content: [{ type: "text", text: JSON.stringify(result, null, 2) }]
+        content: [{ type: "text", text: JSON.stringify(results, null, 2) }]
       };
     } catch (error) {
       return formatError(error);
@@ -165,14 +177,15 @@ server.tool(
 
 server.tool(
   "sitemaps_submit",
-  "Submit a sitemap",
+  "Submit a sitemap to Search Console or Bing Webmaster Tools",
   {
     siteUrl: z.string().describe("The URL of the site"),
-    feedpath: z.string().describe("The URL of the sitemap")
+    feedpath: z.string().describe("The URL of the sitemap"),
+    engine: z.enum(["google", "bing"]).optional().describe("The search engine (default: google)")
   },
-  async ({ siteUrl, feedpath }) => {
+  async ({ siteUrl, feedpath, engine = "google" }) => {
     try {
-      const result = await sitemaps.submitSitemap(siteUrl, feedpath);
+      const result = engine === "google" ? await sitemaps.submitSitemap(siteUrl, feedpath) : await bingSitemaps.submitSitemap(siteUrl, feedpath);
       return {
         content: [{ type: "text", text: result }]
       };
@@ -184,14 +197,15 @@ server.tool(
 
 server.tool(
   "sitemaps_delete",
-  "Delete a sitemap",
+  "Delete a sitemap from Search Console or Bing Webmaster Tools",
   {
     siteUrl: z.string().describe("The URL of the site"),
-    feedpath: z.string().describe("The URL of the sitemap")
+    feedpath: z.string().describe("The URL of the sitemap"),
+    engine: z.enum(["google", "bing"]).optional().describe("The search engine (default: google)")
   },
-  async ({ siteUrl, feedpath }) => {
+  async ({ siteUrl, feedpath, engine = "google" }) => {
     try {
-      const result = await sitemaps.deleteSitemap(siteUrl, feedpath);
+      const result = engine === "google" ? await sitemaps.deleteSitemap(siteUrl, feedpath) : await bingSitemaps.deleteSitemap(siteUrl, feedpath);
       return {
         content: [{ type: "text", text: result }]
       };
@@ -235,14 +249,17 @@ server.tool(
 
 server.tool(
   "analytics_performance_summary",
-  "Get the aggregate performance metrics (clicks, impressions, CTR, position) for the last N days. Defaults to 28 days. Note: Data is typically delayed by 2-3 days.",
+  "Get the aggregate performance metrics (clicks, impressions, CTR, position) for the last N days.",
   {
     siteUrl: z.string().describe("The URL of the site"),
-    days: z.number().optional().describe("Number of days to look back (default: 28)")
+    days: z.number().optional().describe("Number of days to look back (default: 28)"),
+    engine: z.enum(["google", "bing"]).optional().describe("The search engine (default: google)")
   },
-  async ({ siteUrl, days }) => {
+  async ({ siteUrl, days, engine = "google" }) => {
     try {
-      const result = await analytics.getPerformanceSummary(siteUrl, days);
+      const result = engine === "google"
+        ? await analytics.getPerformanceSummary(siteUrl, days)
+        : await bingAnalytics.getPerformanceSummary(siteUrl, days);
       return {
         content: [{ type: "text", text: JSON.stringify(result, null, 2) }]
       };
@@ -465,15 +482,18 @@ server.tool(
 // Inspection Tools
 server.tool(
   "inspection_inspect",
-  "Inspect a URL to check its indexing status, crawl info, and mobile usability",
+  "Inspect a URL to check its indexing status, crawl info, and health",
   {
-    siteUrl: z.string().describe("The URL of the property (must match a verified property in Search Console)"),
-    inspectionUrl: z.string().describe("The fully-qualified URL to inspect (must be under the siteUrl property)"),
-    languageCode: z.string().optional().describe("Language code for localized results (default: en-US)")
+    siteUrl: z.string().describe("The URL of the property"),
+    inspectionUrl: z.string().describe("The fully-qualified URL to inspect"),
+    languageCode: z.string().optional().describe("Language code for localized results (Google only)"),
+    engine: z.enum(["google", "bing"]).optional().describe("The search engine (default: google)")
   },
-  async ({ siteUrl, inspectionUrl, languageCode }) => {
+  async ({ siteUrl, inspectionUrl, languageCode, engine = "google" }) => {
     try {
-      const result = await inspection.inspectUrl(siteUrl, inspectionUrl, languageCode);
+      const result = engine === "google"
+        ? await inspection.inspectUrl(siteUrl, inspectionUrl, languageCode)
+        : await bingInspection.getUrlInfo(siteUrl, inspectionUrl);
       return {
         content: [{ type: "text", text: JSON.stringify(result, null, 2) }]
       };
@@ -543,16 +563,19 @@ server.tool(
 
 server.tool(
   "seo_low_hanging_fruit",
-  "Find keywords with high impressions but low rankings (positions 5-20) that have potential for quick wins",
+  "Find keywords with high impressions but low rankings that have potential for growth",
   {
     siteUrl: z.string().describe("The site URL"),
-    days: z.number().optional().describe("Number of days to analyze (default: 28)"),
+    days: z.number().optional().describe("Number of days (Google only, default: 28)"),
     minImpressions: z.number().optional().describe("Minimum impressions threshold (default: 100)"),
-    limit: z.number().optional().describe("Max results to return (default: 50)")
+    limit: z.number().optional().describe("Max results to return (default: 50)"),
+    engine: z.enum(["google", "bing"]).optional().describe("The search engine (default: google)")
   },
-  async ({ siteUrl, days, minImpressions, limit }) => {
+  async ({ siteUrl, days, minImpressions, limit, engine = "google" }) => {
     try {
-      const result = await seoInsights.findLowHangingFruit(siteUrl, { days, minImpressions, limit });
+      const result = engine === "google"
+        ? await seoInsights.findLowHangingFruit(siteUrl, { days, minImpressions, limit })
+        : await bingSeoInsights.findLowHangingFruit(siteUrl, { minImpressions, limit });
       return {
         content: [{ type: "text", text: JSON.stringify(result, null, 2) }]
       };
@@ -567,13 +590,16 @@ server.tool(
   "Detect keyword cannibalization - multiple pages competing for the same query",
   {
     siteUrl: z.string().describe("The site URL"),
-    days: z.number().optional().describe("Number of days to analyze (default: 28)"),
+    days: z.number().optional().describe("Number of days (Google only, default: 28)"),
     minImpressions: z.number().optional().describe("Minimum impressions threshold (default: 50)"),
-    limit: z.number().optional().describe("Max issues to return (default: 30)")
+    limit: z.number().optional().describe("Max issues to return (default: 30)"),
+    engine: z.enum(["google", "bing"]).optional().describe("The search engine (default: google)")
   },
-  async ({ siteUrl, days, minImpressions, limit }) => {
+  async ({ siteUrl, days, minImpressions, limit, engine = "google" }) => {
     try {
-      const result = await seoInsights.detectCannibalization(siteUrl, { days, minImpressions, limit });
+      const result = engine === "google"
+        ? await seoInsights.detectCannibalization(siteUrl, { days, minImpressions, limit })
+        : await bingSeoInsights.detectCannibalization(siteUrl, { minImpressions, limit });
       return {
         content: [{ type: "text", text: JSON.stringify(result, null, 2) }]
       };
@@ -585,16 +611,19 @@ server.tool(
 
 server.tool(
   "seo_low_ctr_opportunities",
-  "Find queries ranking in positions 1-10 with low CTR (< 60% of benchmark). Great for title tag optimization.",
+  "Find queries with low CTR relative to their ranking position. Great for title tag optimization.",
   {
     siteUrl: z.string().describe("The site URL"),
-    days: z.number().optional().describe("Number of days to analyze (default: 28)"),
+    days: z.number().optional().describe("Number of days (Google only, default: 28)"),
     minImpressions: z.number().optional().describe("Minimum impressions threshold (default: 500)"),
-    limit: z.number().optional().describe("Max results to return (default: 50)")
+    limit: z.number().optional().describe("Max issues to return (default: 50)"),
+    engine: z.enum(["google", "bing"]).optional().describe("The search engine (default: google)")
   },
-  async ({ siteUrl, days, minImpressions, limit }) => {
+  async ({ siteUrl, days, minImpressions, limit, engine = "google" }) => {
     try {
-      const result = await seoInsights.findLowCTROpportunities(siteUrl, { days, minImpressions, limit });
+      const result = engine === "google"
+        ? await seoInsights.findLowCTROpportunities(siteUrl, { days, minImpressions, limit })
+        : await bingSeoInsights.findLowCTROpportunities(siteUrl, { minImpressions, limit });
       return {
         content: [{ type: "text", text: JSON.stringify(result, null, 2) }]
       };
@@ -609,12 +638,15 @@ server.tool(
   "Find keywords ranking in positions 8-15. These are high-priority targets to push to Page 1.",
   {
     siteUrl: z.string().describe("The site URL"),
-    days: z.number().optional().describe("Number of days to analyze (default: 28)"),
-    limit: z.number().optional().describe("Max results to return (default: 50)")
+    days: z.number().optional().describe("Number of days (Google only, default: 28)"),
+    limit: z.number().optional().describe("Max results to return (default: 50)"),
+    engine: z.enum(["google", "bing"]).optional().describe("The search engine (default: google)")
   },
-  async ({ siteUrl, days, limit }) => {
+  async ({ siteUrl, days, limit, engine = "google" }) => {
     try {
-      const result = await seoInsights.findStrikingDistance(siteUrl, { days, limit });
+      const result = engine === "google"
+        ? await seoInsights.findStrikingDistance(siteUrl, { days, limit })
+        : await bingSeoInsights.findStrikingDistance(siteUrl, { limit });
       return {
         content: [{ type: "text", text: JSON.stringify(result, null, 2) }]
       };
@@ -669,13 +701,16 @@ server.tool(
   "Find pages with queries ranking on page 2 (positions 11-20) that could be pushed to page 1",
   {
     siteUrl: z.string().describe("The site URL"),
-    days: z.number().optional().describe("Number of days to analyze (default: 28)"),
+    days: z.number().optional().describe("Number of days (Google only, default: 28)"),
     minImpressions: z.number().optional().describe("Minimum impressions threshold (default: 100)"),
-    limit: z.number().optional().describe("Max results to return (default: 20)")
+    limit: z.number().optional().describe("Max results to return (default: 20)"),
+    engine: z.enum(["google", "bing"]).optional().describe("The search engine (default: google)")
   },
-  async ({ siteUrl, days, minImpressions, limit }) => {
+  async ({ siteUrl, days, minImpressions, limit, engine = "google" }) => {
     try {
-      const result = await seoInsights.findQuickWins(siteUrl, { days, minImpressions, limit });
+      const result = engine === "google"
+        ? await seoInsights.findQuickWins(siteUrl, { days, minImpressions, limit })
+        : await bingSeoInsights.findLowHangingFruit(siteUrl, { minImpressions, limit });
       return {
         content: [{ type: "text", text: JSON.stringify(result, null, 2) }]
       };
@@ -690,10 +725,13 @@ server.tool(
 server.tool(
   "seo_primitive_ranking_bucket",
   "primitive: Get the ranking bucket for a specific position (e.g. Top 3, Page 1).",
-  { position: z.number().describe("The ranking position") },
-  async ({ position }) => {
+  {
+    position: z.number().describe("The ranking position"),
+    engine: z.enum(["google", "bing"]).optional().describe("The search engine (optional)")
+  },
+  async ({ position, engine }) => {
     return {
-      content: [{ type: "text", text: JSON.stringify(seoPrimitives.getRankingBucket(position), null, 2) }]
+      content: [{ type: "text", text: JSON.stringify(seoPrimitives.getRankingBucket(position, engine), null, 2) }]
     };
   }
 );
@@ -703,11 +741,12 @@ server.tool(
   "primitive: Calculate the delta between two traffic metrics (absolute and percentage).",
   {
     current: z.number().describe("Current value"),
-    previous: z.number().describe("Previous value")
+    previous: z.number().describe("Previous value"),
+    engine: z.enum(["google", "bing"]).optional().describe("The search engine (optional)")
   },
-  async ({ current, previous }) => {
+  async ({ current, previous, engine }) => {
     return {
-      content: [{ type: "text", text: JSON.stringify(seoPrimitives.calculateTrafficDelta(current, previous), null, 2) }]
+      content: [{ type: "text", text: JSON.stringify(seoPrimitives.calculateTrafficDelta(current, previous, engine), null, 2) }]
     };
   }
 );
@@ -717,11 +756,12 @@ server.tool(
   "primitive: Check if a query is a brand query based on a regex pattern.",
   {
     query: z.string().describe("The search query"),
-    brandRegex: z.string().describe("Regex pattern to identify brand terms")
+    brandRegex: z.string().describe("Regex pattern to identify brand terms"),
+    engine: z.enum(["google", "bing"]).optional().describe("The search engine (optional)")
   },
-  async ({ query, brandRegex }) => {
+  async ({ query, brandRegex, engine }) => {
     return {
-      content: [{ type: "text", text: JSON.stringify(seoPrimitives.isBrandQuery(query, brandRegex), null, 2) }]
+      content: [{ type: "text", text: JSON.stringify(seoPrimitives.isBrandQuery(query, brandRegex, engine), null, 2) }]
     };
   }
 );
@@ -736,11 +776,12 @@ server.tool(
     pageA_clicks: z.number(),
     pageB_position: z.number(),
     pageB_impressions: z.number(),
-    pageB_clicks: z.number()
+    pageB_clicks: z.number(),
+    engine: z.enum(["google", "bing"]).optional().describe("The search engine (optional)")
   },
-  async ({ query, pageA_position, pageA_impressions, pageA_clicks, pageB_position, pageB_impressions, pageB_clicks }) => {
-    const pageA = { position: pageA_position, impressions: pageA_impressions, clicks: pageA_clicks };
-    const pageB = { position: pageB_position, impressions: pageB_impressions, clicks: pageB_clicks };
+  async ({ query, pageA_position, pageA_impressions, pageA_clicks, pageB_position, pageB_impressions, pageB_clicks, engine }) => {
+    const pageA = { position: pageA_position, impressions: pageA_impressions, clicks: pageA_clicks, engine };
+    const pageB = { position: pageB_position, impressions: pageB_impressions, clicks: pageB_clicks, engine };
     return {
       content: [{ type: "text", text: JSON.stringify(seoPrimitives.isCannibalized(query, pageA, pageB), null, 2) }]
     };
@@ -804,6 +845,38 @@ server.tool(
 );
 
 server.tool(
+  "bing_sites_add",
+  "Add a new site to Bing Webmaster Tools",
+  { siteUrl: z.string().describe("The URL of the site to add") },
+  async ({ siteUrl }) => {
+    try {
+      const result = await bingSites.addSite(siteUrl);
+      return {
+        content: [{ type: "text", text: result }]
+      };
+    } catch (error) {
+      return formatError(error);
+    }
+  }
+);
+
+server.tool(
+  "bing_sites_delete",
+  "Remove a site from Bing Webmaster Tools",
+  { siteUrl: z.string().describe("The URL of the site to remove") },
+  async ({ siteUrl }) => {
+    try {
+      const result = await bingSites.removeSite(siteUrl);
+      return {
+        content: [{ type: "text", text: result }]
+      };
+    } catch (error) {
+      return formatError(error);
+    }
+  }
+);
+
+server.tool(
   "bing_sitemaps_list",
   "List sitemaps for a Bing site",
   {
@@ -831,6 +904,25 @@ server.tool(
   async ({ siteUrl, sitemapUrl }) => {
     try {
       const result = await bingSitemaps.submitSitemap(siteUrl, sitemapUrl);
+      return {
+        content: [{ type: "text", text: result }]
+      };
+    } catch (error) {
+      return formatError(error);
+    }
+  }
+);
+
+server.tool(
+  "bing_sitemaps_delete",
+  "Remove a sitemap from Bing Webmaster Tools",
+  {
+    siteUrl: z.string().describe("The URL of the site"),
+    sitemapUrl: z.string().describe("The URL of the sitemap to remove")
+  },
+  async ({ siteUrl, sitemapUrl }) => {
+    try {
+      const result = await bingSitemaps.deleteSitemap(siteUrl, sitemapUrl);
       return {
         content: [{ type: "text", text: result }]
       };
@@ -1529,15 +1621,20 @@ server.resource(
 // Prompts
 server.prompt(
   "analyze-site-performance",
-  { siteUrl: z.string().describe("The URL of the site to analyze") },
-  ({ siteUrl }) => ({
+  {
+    siteUrl: z.string().describe("The URL of the site to analyze"),
+    engine: z.enum(["google", "bing"]).optional().describe("The search engine to use (default: google)")
+  },
+  ({ siteUrl, engine = "google" }) => ({
     messages: [{
       role: "user",
       content: {
         type: "text",
-        text: `Please analyze the performance of the site ${siteUrl} for the last 28 days.
-        Use the 'analytics_performance_summary' tool to get high-level metrics, and 'analytics_query' to dig deeper into top queries and pages if needed.
-        Provide a summary of the site's health and any opportunities for improvement.`
+        text: `Please analyze the performance of the site ${siteUrl} on ${engine === 'google' ? 'Google' : 'Bing'} for the last 28 days.
+        ${engine === 'google'
+            ? "Use the 'analytics_performance_summary' tool to get high-level metrics, and 'analytics_query' to dig deeper into top queries and pages if needed."
+            : "Use the 'bing_analytics_query' tool to get query stats and 'bing_analytics_page' for page-level performance."}
+        Provide a summary of the site's health and any opportunities for improvement on ${engine === 'google' ? 'Google' : 'Bing'}.`
       }
     }]
   })
@@ -1545,21 +1642,32 @@ server.prompt(
 
 server.prompt(
   "compare-performance",
-  { siteUrl: z.string().describe("The URL of the site to analyze") },
-  ({ siteUrl }) => ({
+  {
+    siteUrl: z.string().describe("The URL of the site to analyze"),
+    engine: z.enum(["google", "bing"]).optional().describe("The search engine to use (default: google)")
+  },
+  ({ siteUrl, engine = "google" }) => ({
     messages: [{
       role: "user",
       content: {
         type: "text",
-        text: `Compare the performance of ${siteUrl} for this week vs last week.
+        text: `Compare the performance of ${siteUrl} on ${engine === 'google' ? 'Google' : 'Bing'} for this week vs last week.
 
-Use the 'analytics_compare_periods' tool to compare the two periods:
+${engine === 'google'
+            ? `Use the 'analytics_compare_periods' tool to compare the two periods:
 - Period 1 (this week): last 7 days ending 3 days ago (to account for data delay)
 - Period 2 (last week): the 7 days before that
 
 Analyze the changes in clicks, impressions, CTR, and position.
 Highlight any significant improvements or declines.
 If there are notable changes, use 'analytics_top_queries' to identify which queries are driving the change.`
+            : `Use the 'bing_analytics_compare_periods' tool to compare the two periods.
+Define two 7-day ranges (e.g., current period and previous period).
+
+Analyze the changes in clicks, impressions, CTR, and position.
+Highlight any significant improvements or declines.
+Use 'bing_analytics_query' to identify which queries are driving changes in traffic.`
+          }`
       }
     }]
   })
@@ -1567,18 +1675,27 @@ If there are notable changes, use 'analytics_top_queries' to identify which quer
 
 server.prompt(
   "find-declining-pages",
-  { siteUrl: z.string().describe("The URL of the site to analyze") },
-  ({ siteUrl }) => ({
+  {
+    siteUrl: z.string().describe("The URL of the site to analyze"),
+    engine: z.enum(["google", "bing"]).optional().describe("The search engine to use (default: google)")
+  },
+  ({ siteUrl, engine = "google" }) => ({
     messages: [{
       role: "user",
       content: {
         type: "text",
-        text: `Find pages on ${siteUrl} that are losing traffic.
+        text: `Find pages on ${siteUrl} that are losing traffic on ${engine === 'google' ? 'Google' : 'Bing'}.
 
-Steps:
+${engine === 'google'
+            ? `Steps:
 1. Use 'analytics_compare_periods' to compare this week vs last week overall
 2. Use 'analytics_query' with dimension 'page' to get page-level data for both periods
-3. Identify pages with significant click/impression drops
+3. Identify pages with significant click/impression drops`
+            : `Steps:
+1. Use 'bing_analytics_compare_periods' to identify overall traffic direction.
+2. Use 'bing_analytics_page' to get top pages.
+3. Use 'bing_analytics_page_query' for specific pages to see which queries dropped.`
+          }
 
 For each declining page, provide:
 - The URL
@@ -1591,26 +1708,25 @@ For each declining page, provide:
 
 server.prompt(
   "keyword-opportunities",
-  { siteUrl: z.string().describe("The URL of the site to analyze") },
-  ({ siteUrl }) => ({
+  {
+    siteUrl: z.string().describe("The URL of the site to analyze"),
+    engine: z.enum(["google", "bing"]).optional().describe("The search engine to use (default: google)")
+  },
+  ({ siteUrl, engine = "google" }) => ({
     messages: [{
       role: "user",
       content: {
         type: "text",
-        text: `Find keyword opportunities for ${siteUrl}.
+        text: `Find keyword opportunities for ${siteUrl} on ${engine === 'google' ? 'Google' : 'Bing'}.
 
-Use 'analytics_top_queries' to get top queries, then analyze for:
+${engine === 'google'
+            ? "Use 'analytics_top_queries' or 'seo_low_hanging_fruit' to find high-potential targets."
+            : "Use 'bing_opportunity_finder' or 'bing_striking_distance' to find high-potential keywords."}
 
+Analyze for:
 1. **Low CTR, High Impressions**: Queries where you rank but don't get clicks
-   - These need better titles/meta descriptions
-   - Look for CTR < 2% with impressions > 100
-
-2. **High Position (>10), Good Impressions**: Queries not on page 1
-   - These are close to ranking well
-   - Small optimization could move them up
-
-3. **New Ranking Queries**: Queries that appeared recently
-   - Opportunities to create more content
+2. **High Position (>10), Good Impressions**: Queries not on page 1 (Striking Distance)
+3. **New Ranking Queries**: Queries that appeared recently (use comparison tools)
 
 Provide specific recommendations for the top 5 opportunities.`
       }
@@ -1622,18 +1738,19 @@ server.prompt(
   "new-content-impact",
   {
     siteUrl: z.string().describe("The URL of the site"),
-    pageUrl: z.string().describe("The URL of the new content to analyze")
+    pageUrl: z.string().describe("The URL of the new content to analyze"),
+    engine: z.enum(["google", "bing"]).optional().describe("The search engine to use (default: google)")
   },
-  ({ siteUrl, pageUrl }) => ({
+  ({ siteUrl, pageUrl, engine = "google" }) => ({
     messages: [{
       role: "user",
       content: {
         type: "text",
-        text: `Analyze the impact of new content at ${pageUrl} on site ${siteUrl}.
+        text: `Analyze the impact of new content at ${pageUrl} on site ${siteUrl} in ${engine === 'google' ? 'Google' : 'Bing'}.
 
-1. Use 'inspection_inspect' to check if the page is indexed
-2. Use 'analytics_query' with a page filter for this URL to get its performance data
-3. Identify which queries are driving traffic to this page
+1. Use '${engine === 'google' ? 'inspection_inspect' : 'bing_url_info'}' to check indexing status.
+2. Use '${engine === 'google' ? 'analytics_query' : 'bing_analytics_page_query'}' to get performance for this specific URL.
+3. Identify which queries are driving traffic to this page.
 
 Provide:
 - Indexing status
@@ -1647,24 +1764,29 @@ Provide:
 
 server.prompt(
   "mobile-vs-desktop",
-  { siteUrl: z.string().describe("The URL of the site to analyze") },
-  ({ siteUrl }) => ({
+  {
+    siteUrl: z.string().describe("The URL of the site to analyze"),
+    engine: z.enum(["google", "bing"]).optional().describe("The search engine to use (default: google)")
+  },
+  ({ siteUrl, engine = "google" }) => ({
     messages: [{
       role: "user",
       content: {
         type: "text",
-        text: `Compare mobile vs desktop performance for ${siteUrl}.
+        text: `Compare mobile vs desktop performance for ${siteUrl} on ${engine === 'google' ? 'Google' : 'Bing'}.
 
-Use 'analytics_query' with dimension 'device' to get device-level metrics.
+${engine === 'google'
+            ? "Use 'analytics_query' with dimension 'device' to get device-level metrics."
+            : "Note: Bing Webmaster API provides limited native device breakdown via the public API, but check if 'bing_analytics_query' or 'bing_analytics_page' results show device distinctions if available."}
 
 Analyze:
-1. Click and impression distribution across devices
-2. CTR differences between mobile and desktop
+1. Click and impression distribution across devices (if data available)
+2. CTR differences
 3. Position ranking differences
 
-If there's a significant gap (e.g., mobile CTR much lower), investigate:
-- Use 'inspection_inspect' on key pages to check mobile usability
-- Recommend specific improvements
+If there's a significant gap, investigate:
+- Use '${engine === 'google' ? 'inspection_inspect' : 'bing_url_info'}' on key pages to check health/usability.
+- Recommend specific improvements.
 
 Provide a summary with actionable recommendations.`
       }
@@ -1675,31 +1797,27 @@ Provide a summary with actionable recommendations.`
 server.prompt(
   "site-health-check",
   {
-    siteUrl: z.string().optional().describe("Optional. The URL of a specific site to check. If omitted, checks all verified sites.")
+    siteUrl: z.string().optional().describe("Optional. The URL of a specific site to check."),
+    engine: z.enum(["google", "bing"]).optional().describe("The search engine to use (default: google)")
   },
-  ({ siteUrl }) => ({
+  ({ siteUrl, engine = "google" }) => ({
     messages: [{
       role: "user",
       content: {
         type: "text",
-        text: `Run a comprehensive health check${siteUrl ? ` for ${siteUrl}` : ' across all my verified sites'}.
+        text: `Run a comprehensive health check for ${siteUrl ? siteUrl : 'all verified sites'} on ${engine === 'google' ? 'Google' : 'Bing'}.
 
-Use the 'sites_health_check' tool${siteUrl ? ` with siteUrl '${siteUrl}'` : ' without a siteUrl to check all sites'}.
+Use the '${engine === 'google' ? 'sites_health_check' : 'bing_sites_health'}' tool.
 
 Then for each site in the results:
-
-1. **Summarize the status** (healthy / warning / critical) with a clear visual indicator.
-2. **Performance:** Report the week-over-week changes in clicks, impressions, CTR, and position.
-3. **Sitemaps:** Note any missing sitemaps, errors, or warnings.
-4. **Anomalies:** Highlight any traffic anomaly drops detected.
+1. **Summarize the status** (healthy / warning / critical).
+2. **Performance:** Report changes in clicks, impressions, CTR, and position.
+3. **Sitemaps:** Note any errors or warnings (use '${engine === 'google' ? 'sitemaps_list' : 'bing_crawl_issues'}').
+4. **Anomalies:** Highlight any traffic drops (use '${engine === 'google' ? 'analytics_anomalies' : 'bing_analytics_detect_anomalies'}').
 
 If any site has a 'critical' or 'warning' status:
-- List the specific issues found.
-- For critical traffic drops, use 'analytics_drop_attribution' to check if a Google algorithm update is the likely cause.
-- For sitemap errors, use 'sitemaps_list' to get detailed error information.
-- Provide 3 prioritized action items for each affected site.
-
-End with an overall portfolio summary and the single most important action to take right now.`
+- For critical drops, use '${engine === 'google' ? 'analytics_drop_attribution' : 'bing_analytics_drop_attribution'}'.
+- Provide 3 prioritized action items.`
       }
     }]
   })
@@ -1734,7 +1852,7 @@ async function main() {
 
   if (!hasServiceAccount && !hasOAuthTokens) {
     console.error('\n╔══════════════════════════════════════════════════════════════╗');
-    console.error('║          🚀 Google Search Console MCP Server                 ║');
+    console.error('║                🚀 Search Console MCP                         ║');
     console.error('╚══════════════════════════════════════════════════════════════╝\n');
     console.error('❌ No authentication found.\n');
     console.error('💡 Please authorize with your Google Account:');
@@ -1747,7 +1865,7 @@ async function main() {
 
   const transport = new StdioServerTransport();
   await server.connect(transport);
-  console.error("Google Search Console MCP Server running on stdio");
+  console.error("Search Console MCP running on stdio");
 }
 
 main().catch((error) => {

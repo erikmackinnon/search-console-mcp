@@ -37,7 +37,7 @@ export interface BingCrawlIssue {
 
 export interface BingUrlSubmissionQuota {
     DailyQuota: number;
-    RemainingQuota: number;
+    MonthlyQuota: number;
 }
 
 export interface BingRankAndTrafficStats {
@@ -64,10 +64,13 @@ export interface BingCrawlStats {
 
 export interface BingUrlInfo {
     Url: string;
-    HttpCode: number;
-    LastCrawled: string;
-    InIndex: boolean;
-    Issues: string[];
+    HttpStatus: number;
+    LastCrawledDate: string;
+    AnchorCount: number;
+    DiscoveryDate: string;
+    DocumentSize: number;
+    IsPage: boolean;
+    TotalChildUrlCount: number;
 }
 
 export interface BingLinkCount {
@@ -124,36 +127,48 @@ export class BingClient {
         return this.request<BingSite[]>('GetUserSites');
     }
 
+    async addSite(siteUrl: string): Promise<void> {
+        return this.request<void>('AddSite', { siteUrl }, true);
+    }
+
+    async removeSite(siteUrl: string): Promise<void> {
+        return this.request<void>('RemoveSite', { siteUrl }, true);
+    }
+
     async getQueryStats(siteUrl: string): Promise<BingQueryStats[]> {
-        return this.request<BingQueryStats[]>('GetQueryStats', { siteUrl }, true);
+        return this.request<BingQueryStats[]>('GetQueryStats', { siteUrl });
     }
 
     async getPageStats(siteUrl: string): Promise<BingPageStats[]> {
-        return this.request<BingPageStats[]>('GetPageStats', { siteUrl }, true);
+        return this.request<BingPageStats[]>('GetPageStats', { siteUrl });
     }
 
-    async getPageQueryStats(siteUrl: string, pageUrl: string): Promise<BingQueryStats[]> {
-        return this.request<BingQueryStats[]>('GetPageQueryStats', { siteUrl, pageUrl }, true);
+    async getPageQueryStats(siteUrl: string, page: string): Promise<BingQueryStats[]> {
+        return this.request<BingQueryStats[]>('GetPageQueryStats', { siteUrl, page });
     }
 
-    async submitSitemap(siteUrl: string, sitemapUrl: string): Promise<void> {
-        await this.request<void>('SubmitSitemap', { siteUrl, sitemapUrl }, true);
+    async submitSitemap(siteUrl: string, feedUrl: string): Promise<void> {
+        await this.request<void>('SubmitFeed', { siteUrl, feedUrl }, true);
     }
 
-    async getSitemaps(siteUrl: string): Promise<any[]> {
-        return this.request<any[]>('GetSitemaps', { siteUrl }, true);
+    async deleteSitemap(siteUrl: string, feedUrl: string): Promise<void> {
+        await this.request<void>('RemoveFeed', { siteUrl, feedUrl }, true);
+    }
+
+    async getFeeds(siteUrl: string): Promise<any[]> {
+        return this.request<any[]>('GetFeeds', { siteUrl });
     }
 
     async getKeywordStats(q: string, country?: string, language?: string): Promise<BingKeywordStats[]> {
-        return this.request<BingKeywordStats[]>('GetKeywordStats', { q, country, language }, true);
+        return this.request<BingKeywordStats[]>('GetKeywordStats', { q, country, language });
     }
 
     async getCrawlIssues(siteUrl: string): Promise<BingCrawlIssue[]> {
-        return this.request<BingCrawlIssue[]>('GetCrawlIssues', { siteUrl }, true);
+        return this.request<BingCrawlIssue[]>('GetCrawlIssues', { siteUrl });
     }
 
     async getUrlSubmissionQuota(siteUrl: string): Promise<BingUrlSubmissionQuota> {
-        return this.request<BingUrlSubmissionQuota>('GetUrlSubmissionQuota', { siteUrl }, true);
+        return this.request<BingUrlSubmissionQuota>('GetUrlSubmissionQuota', { siteUrl });
     }
 
     async submitUrl(siteUrl: string, url: string): Promise<void> {
@@ -165,27 +180,27 @@ export class BingClient {
     }
 
     async getQueryPageStats(siteUrl: string): Promise<BingQueryPageStats[]> {
-        return this.request<BingQueryPageStats[]>('GetQueryPageStats', { siteUrl }, true);
+        return this.request<BingQueryPageStats[]>('GetQueryPageStats', { siteUrl });
     }
 
     async getRankAndTrafficStats(siteUrl: string): Promise<BingRankAndTrafficStats[]> {
-        return this.request<BingRankAndTrafficStats[]>('GetRankAndTrafficStats', { siteUrl }, true);
+        return this.request<BingRankAndTrafficStats[]>('GetRankAndTrafficStats', { siteUrl });
     }
 
     async getCrawlStats(siteUrl: string): Promise<BingCrawlStats[]> {
-        return this.request<BingCrawlStats[]>('GetCrawlStats', { siteUrl }, true);
+        return this.request<BingCrawlStats[]>('GetCrawlStats', { siteUrl });
     }
 
     async getUrlInfo(siteUrl: string, url: string): Promise<BingUrlInfo> {
-        return this.request<BingUrlInfo>('GetUrlInfo', { siteUrl, url }, true);
+        return this.request<BingUrlInfo>('GetUrlInfo', { siteUrl, url });
     }
 
     async getLinkCounts(siteUrl: string): Promise<BingLinkCount[]> {
-        return this.request<BingLinkCount[]>('GetLinkCounts', { siteUrl }, true);
+        return this.request<BingLinkCount[]>('GetLinkCounts', { siteUrl });
     }
 
     async getRelatedKeywords(q: string, country?: string, language?: string): Promise<BingRelatedKeyword[]> {
-        return this.request<BingRelatedKeyword[]>('GetRelatedKeywords', { q, country, language }, true);
+        return this.request<BingRelatedKeyword[]>('GetRelatedKeywords', { q, country, language });
     }
 }
 
