@@ -259,12 +259,7 @@ export async function detectCannibalization(
         startDate: startDate.toISOString().split('T')[0],
         endDate: endDate.toISOString().split('T')[0],
         dimensions: ['query', 'page'],
-        limit: 10000,
-        filters: [{
-            dimension: 'position',
-            operator: 'smallerThan',
-            expression: '20' // Only care about cannibalization on first 2 pages
-        }]
+        limit: 10000
     });
 
     // Group by query
@@ -281,7 +276,7 @@ export async function detectCannibalization(
         const page = row.keys?.[1] ?? '';
         const impressions = row.impressions ?? 0;
 
-        if (impressions < minImpressions) continue;
+        if (impressions < minImpressions || (row.position ?? 100) > 20) continue;
 
         if (!queryMap.has(query)) {
             queryMap.set(query, []);

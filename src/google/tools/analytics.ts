@@ -16,10 +16,13 @@ export function clearAnalyticsCache() {
 
 function generateCacheKey(options: AnalyticsOptions): string {
   const clone = { ...options };
-  // Sort arrays to ensure deterministic keys
+  // Dimensions order matters because it determines the order of keys in the response.
+  // We should NOT sort them.
+  /*
   if (clone.dimensions) {
     clone.dimensions = [...clone.dimensions].sort();
   }
+  */
   if (clone.filters) {
     clone.filters = [...clone.filters].sort((a, b) =>
       (a.dimension + a.operator + a.expression).localeCompare(b.dimension + b.operator + b.expression)
