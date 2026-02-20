@@ -9,7 +9,7 @@ import {
     getPerformanceBySearchAppearance,
     detectTrends,
     detectAnomalies
-} from '../src/tools/analytics';
+} from '../src/google/tools/analytics';
 import {
     detectCannibalization,
     findLowCTROpportunities,
@@ -18,8 +18,8 @@ import {
     analyzeBrandVsNonBrand,
     findQuickWins,
     findLowHangingFruit
-} from '../src/tools/seo-insights';
-import { isBrandQuery, isCannibalized } from '../src/tools/seo-primitives';
+} from '../src/google/tools/seo-insights';
+import { isBrandQuery, isCannibalized } from '../src/common/tools/seo-primitives';
 
 describe('100% Coverage Edge Cases', () => {
 

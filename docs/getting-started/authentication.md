@@ -1,6 +1,6 @@
 ---
 title: "Authentication"
-description: "Setting up Google Cloud credentials for Search Console."
+description: "Authentication for Google Search Console and Bing Webmaster Tools."
 ---
 
 To use this MCP server, you must authenticate with the Google Search Console API. We recommend the **Secure Desktop Flow**, which uses your local machine's keychain and hardware-bound encryption to store tokens safely.
@@ -74,3 +74,37 @@ Set the `GOOGLE_APPLICATION_CREDENTIALS` environment variable to point to your k
 ```bash
 export GOOGLE_APPLICATION_CREDENTIALS="/path/to/your/key.json"
 ```
+
+---
+
+## 3. Bing Webmaster Tools (API Key)
+
+To access Bing data, you simply need an API Key.
+
+### Step 1: Get Your API Key
+1.  Go to [Bing Webmaster Tools Settings](https://www.bing.com/webmasters/settings/api).
+2.  Log in with your Microsoft account.
+3.  Click **Generate API Key**.
+4.  Copy the key.
+
+### Step 2: Configure the Client
+You can configure the Bing API Key in your MCP client configuration using the `BING_API_KEY` environment variable.
+
+**Example for Claude Desktop:**
+```json
+{
+  "mcpServers": {
+    "search-console": {
+      "command": "npx",
+      "args": ["-y", "search-console-mcp"],
+      "env": {
+        "BING_API_KEY": "YOUR_BING_API_KEY"
+      }
+    }
+  }
+}
+```
+
+### Setup Wizard support
+Alternatively, run `npx search-console-mcp setup` and choose Option 3 to configure your Bing API Key interactively.
+

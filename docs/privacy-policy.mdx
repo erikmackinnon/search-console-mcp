@@ -6,7 +6,7 @@ title: 'Privacy Policy'
 
 **Effective Date:** 2026-02-01
 
-Search Console MCP is a local command-line (CLI) tool that connects to a user’s Google Search Console account to retrieve performance data.
+Search Console MCP is a local command-line (CLI) tool that connects to a user’s Google Search Console and Bing Webmaster Tools accounts to retrieve performance data.
 
 ---
 
@@ -14,9 +14,10 @@ Search Console MCP is a local command-line (CLI) tool that connects to a user’
 
 Search Console MCP requests the following Google OAuth scope:
 
-- `https://www.googleapis.com/auth/webmasters.readonly`
+- `https://www.googleapis.com/auth/webmasters.readonly` (Google)
+- `BING_API_KEY` Environment Variable (Bing)
 
-This scope provides **read-only access** to Google Search Console data.
+This provides **read-only access** to Google Search Console and Bing Webmaster Tools data.
 
 The application:
 - Does not request write access.
@@ -45,7 +46,7 @@ Search Console MCP:
 - Does not share user data with third parties.
 - Does not transmit Search Console data to the developer.
 
-All API requests are made directly from the user’s device to Google’s servers.
+All API requests are made directly from the user’s device to Google’s and Bing's servers.
 
 ---
 

@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { mockSearchConsoleClient } from './mocks';
-import { listSites, addSite, deleteSite, getSite } from '../src/tools/sites';
-import { listSitemaps, submitSitemap, deleteSitemap, getSitemap } from '../src/tools/sitemaps';
+import { listSites, addSite, deleteSite, getSite } from '../src/google/tools/sites';
+import { listSitemaps, submitSitemap, deleteSitemap, getSitemap } from '../src/google/tools/sitemaps';
 import {
     queryAnalytics,
     getPerformanceSummary,
@@ -9,8 +9,8 @@ import {
     getTopQueries,
     getTopPages,
     clearAnalyticsCache
-} from '../src/tools/analytics';
-import { inspectUrl } from '../src/tools/inspection';
+} from '../src/google/tools/analytics';
+import { inspectUrl } from '../src/google/tools/inspection';
 
 describe('Sites Tools', () => {
     beforeEach(() => {

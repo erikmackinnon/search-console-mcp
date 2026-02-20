@@ -12,9 +12,9 @@ Search Console MCP is designed with a security-first architecture appropriate fo
 
 The application uses OAuth 2.0 Device Authorization Flow.
 
-- Users authenticate directly with Google.
+- Users authenticate directly with Google (OAuth) or Bing (API Key).
 - The application never receives user passwords.
-- Only read-only Search Console scope is requested.
+- Only read-only Search Console and Bing scopes are requested.
 
 ---
 
@@ -46,7 +46,7 @@ Search Console MCP:
 - Does not transmit user data to the developer.
 - Does not collect analytics about user data.
 
-All API communication occurs directly between the user’s device and Google’s APIs.
+All API communication occurs directly between the user’s device and Google's/Bing's APIs.
 
 ---
 

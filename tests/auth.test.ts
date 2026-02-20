@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { loadTokens, saveTokens, logout, getUserEmail } from '../src/google-client.js';
+import { loadTokens, saveTokens, logout, getUserEmail } from '../src/google/client.js';
 import { existsSync, readFileSync, writeFileSync, unlinkSync } from 'fs';
 import nodeMachineId from 'node-machine-id';
 

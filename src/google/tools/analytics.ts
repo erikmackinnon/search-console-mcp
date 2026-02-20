@@ -1,4 +1,4 @@
-import { getSearchConsoleClient } from '../google-client.js';
+import { getSearchConsoleClient } from '../client.js';
 import { searchconsole_v1 } from 'googleapis';
 
 const CACHE_TTL_MS = 60 * 1000; // 60 seconds

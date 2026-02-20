@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { mockSearchConsoleClient } from './mocks';
-import { healthCheck } from '../src/tools/sites-health';
-import { clearAnalyticsCache } from '../src/tools/analytics';
+import { healthCheck } from '../src/google/tools/sites-health';
+import { clearAnalyticsCache } from '../src/google/tools/analytics';
 
 describe('Sites Health Check', () => {
     beforeEach(() => {

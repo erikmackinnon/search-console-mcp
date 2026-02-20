@@ -1,7 +1,7 @@
 
-# Google Search Console MCP Server
+# Search Console MCP
 
-A Model Context Protocol (MCP) server that transforms how you interact with Google Search Console. Stop exporting CSVs and start asking questions.
+A Model Context Protocol (MCP) server that transforms how you interact with **Google Search Console** and **Bing Webmaster Tools**. Stop exporting CSVs and start asking questions.
 
 [📚 View Documentation](https://searchconsolemcp.mintlify.app/)
 
@@ -46,6 +46,9 @@ Copy and paste these into your MCP client (Claude Desktop, etc.) to see the inte
 
 #### ⚡ The Speed vs. Ranking Correlator
 > "Fetch the top 5 pages by impressions. For these pages, run a PageSpeed audit. Is there any correlation between low performance scores and recently declining positions?"
+
+#### 🔍 Multi-Engine Comparison
+> "Compare my performance between Google and Bing for the last 30 days. Which keywords are ranking better on Bing but have lower traffic on Google?"
 
 ---
 
@@ -95,6 +98,20 @@ For server-side environments or automated tasks where interactive login isn't po
 
 ---
 
+## 🔑 Bing Webmaster Tools (API Key)
+
+To access Bing data, you simply need an API Key.
+
+### Setup:
+1.  **Get Your API Key**: Go to [Bing Webmaster Tools Settings](https://www.bing.com/webmasters/settings/api).
+2.  **Configure**: Set the API key in your environment:
+    ```bash
+    export BING_API_KEY="your-api-key-here"
+    ```
+3.  **IndexNow**: Bing tools also support **IndexNow** for instant URL submission.
+
+---
+
 
 ## 🛡️ Fort Knox Security
 
@@ -110,7 +127,7 @@ This MCP server implements a multi-layered security architecture:
 
 ## Tools Reference
 
-### Analytics
+### Google Analytics
 | Tool | Description |
 |------|-------------|
 | `analytics_query` | Master tool for raw data. Supports `dimensions`, `filters`, `aggregationType` (byPage/byProperty), `dataState` (final/all), and `type` (web/image/news/discover). |
@@ -153,6 +170,20 @@ These are low-level tools designed to be used by other AI agents to build comple
 | `inspection_inspect` | Google URL Inspection API (Index status, mobile usability). |
 | `pagespeed_analyze` | Lighthouse scores & Core Web Vitals. |
 | `schema_validate` | Validate Structured Data (JSON-LD). |
+
+### Bing Webmaster Tools
+| Tool | Description |
+|------|-------------|
+| `bing_sites_list` | List all verified sites in Bing. |
+| `bing_analytics_query` | Query search performance from Bing. |
+| `bing_opportunity_finder` | Find low-hanging fruit keywords on Bing. |
+| `bing_seo_recommendations` | Get prioritized SEO insights for Bing. |
+| `bing_url_info` | Detailed indexing and crawl info for a URL (Bing). |
+| `bing_index_now` | **[NEW]** Instantly notify search engines of changes. |
+| `bing_crawl_issues` | List crawl issues detected by Bing. |
+| `bing_analytics_detect_anomalies` | Detect daily spikes or drops in Bing traffic. |
+| `bing_analytics_time_series` | Advanced time series analysis for Bing. |
+| `bing_sitemaps_list` / `bing_sitemaps_submit` | Manage sitemaps in Bing. |
 
 
 

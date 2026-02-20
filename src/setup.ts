@@ -6,7 +6,7 @@ import { createInterface } from 'readline';
 import { homedir } from 'os';
 import { fileURLToPath } from 'url';
 import { execSync } from 'child_process';
-import { startLocalFlow, saveTokens, getUserEmail, logout, DEFAULT_CLIENT_ID, DEFAULT_CLIENT_SECRET } from './google-client.js';
+import { startLocalFlow, saveTokens, getUserEmail, logout, DEFAULT_CLIENT_ID, DEFAULT_CLIENT_SECRET } from './google/client.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -297,24 +297,61 @@ async function supportProject() {
     }
 }
 
+async function setupBing() {
+    printStep(1, 'Get your Bing Webmaster Tools API Key');
+    console.log('If you don\'t have one yet:');
+    console.log('  1. Go to https://www.bing.com/webmasters/settings/api');
+    console.log('  2. Log in with your Microsoft account');
+    console.log('  3. Click "API Key" and copy it\n');
+
+    const apiKey = await ask('Enter your Bing API Key: ');
+
+    if (!apiKey) {
+        printError('No API Key provided.');
+        return;
+    }
+
+    printSuccess('Bing API Key captured!');
+
+    printStep(2, 'Configure your MCP client');
+    console.log('\nAdd this to your MCP client configuration (e.g., Claude Desktop config):\n');
+    console.log(JSON.stringify({
+        mcpServers: {
+            "search-console": {
+                command: "npx",
+                args: ["-y", "search-console-mcp"],
+                env: {
+                    BING_API_KEY: apiKey
+                }
+            }
+        }
+    }, null, 2));
+
+    console.log('\n🎉 Bing setup information displayed above.');
+    await supportProject();
+    rl.close();
+}
+
 export async function main() {
     printHeader();
-    console.log('Choose your authentication method:');
+    console.log('What would you like to configure?');
 
-    console.log('\n1. OAuth 2.0 Desktop Flow (Recommended)');
-    console.log('   - Pros: Automatic authorization, uses your direct Google Account.');
-    console.log('   - Requirement: Opens a browser window and starts a brief local server.');
+    console.log('\n1. Google Search Console (OAuth 2.0 - Recommended)');
+    console.log('2. Google Search Console (Service Account - Advanced)');
+    console.log('3. Bing Webmaster Tools (API Key)');
 
-    console.log('\n2. Service Account (Advanced)');
-    console.log('   - Pros: Fixed credentials, ideal for server environments and automated tasks.');
-    console.log('   - Cons: Requires creating a Google Cloud Project and manual Search Console sharing.');
+    const choice = await ask('\nEnter your choice (1-3): ');
 
-    const choice = await ask('\nEnter your choice (1 or 2, default is 1): ');
-
-    if (choice === '2') {
-        await setupServiceAccount();
-    } else {
-        await login();
+    switch (choice) {
+        case '2':
+            await setupServiceAccount();
+            break;
+        case '3':
+            await setupBing();
+            break;
+        default:
+            await login();
+            break;
     }
 }
 

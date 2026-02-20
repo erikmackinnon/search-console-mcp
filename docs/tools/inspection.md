@@ -7,10 +7,10 @@ Technical SEO is about ensuring your foundation is solid. These tools allow the 
 
 ## Tools
 
-### `inspect_url`
-Checks the indexing status of a single URL in Google Search.
+### `inspect_url` (Google) & `bing_url_info` (Bing)
+Checks the indexing status of a single URL in Google and Bing.
 *   **When to use:** When a specific page isn't getting any traffic.
-*   **What problem it solves:** Finding out if a page is blocked by robots.txt, redirected, or simply ignored by Google.
+*   **What problem it solves:** Finding out if a page is blocked by robots.txt, redirected, or simply ignored.
 
 ### `get_pagespeed`
 Runs a full PageSpeed Insights analysis, returning Lighthouse scores and Core Web Vitals (CWV).

@@ -8,14 +8,16 @@ Sitemaps are how you tell Google what to crawl. Our sitemap tools give the agent
 ## Tool Groups
 
 ### Site Management
-*   `list_sites`: See everything in your account.
-*   `add_site`: Add a new property.
-*   `delete_site`: Remove a property.
+*   `list_sites` (Google) & `bing_sites_list` (Bing): See everything in your account.
+*   `add_site` (Google): Add a new property (Bing relies on imported sites or Verification via other means typically).
+*   `delete_site` (Google): Remove a property.
 
 ### Sitemap Management
-*   `list_sitemaps`: See status and error counts for all submitted sitemaps.
-*   `submit_sitemap`: Push a new XML sitemap to Google.
-*   `delete_sitemap`: Remove an old or broken sitemap.
+*   `list_sitemaps` (Google) & `bing_sitemaps_list` (Bing): See status and error counts.
+*   `submit_sitemap` (Google) & `bing_sitemaps_submit` (Bing): Push a new XML sitemap to the engine.
+
+### Instant Indexing (Bing Only)
+*   `bing_index_now`: Instantly notify Bing and other engines of new, updated, or deleted URLs. Prefer this over sitemaps for time-sensitive content.
 
 ## Operational Use Cases
 

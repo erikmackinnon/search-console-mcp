@@ -1,6 +1,6 @@
 ---
 title: "Installation"
-description: "Get up and running in less than 2 minutes."
+description: "Get up and running with Google and Bing in less than 2 minutes."
 ---
 
 We designed `search-console-mcp` to work instantly with your favorite AI editor. No complex configuration required.
@@ -8,7 +8,7 @@ We designed `search-console-mcp` to work instantly with your favorite AI editor.
 ## Prerequisites
 
 1.  **Node.js 18 or higher**
-2.  **A verified Google Search Console property**
+2.  **A verified Google Search Console or Bing Webmaster Tools property**
 
 ## 🚀 One-Line Setup
 
@@ -35,13 +35,17 @@ Add this to your `claude_desktop_config.json`:
   "mcpServers": {
     "search-console": {
       "command": "npx",
-      "args": ["-y", "search-console-mcp"]
+      "args": ["-y", "search-console-mcp"],
+      "env": {
+        "BING_API_KEY": "your-api-key-here",
+        "GOOGLE_APPLICATION_CREDENTIALS": "/path/to/your/service-account.json"
+      }
     }
   }
 }
 ```
 
-*That's it! No environment variables needed if you ran the setup command.*
+*That's it! Environment variables are optional and only needed if you are using a Bing API Key or a Google Service Account.*
 
 ### Cursor
 
@@ -52,6 +56,9 @@ Add this to your `claude_desktop_config.json`:
     *   **Name:** `Search Console`
     *   **Type:** `command`
     *   **Command:** `npx -y search-console-mcp`
+5.  **Environment Variables (Optional):** Click **Edit** on your new server to add variables if needed:
+    *   `BING_API_KEY`: For Bing integration.
+    *   `GOOGLE_APPLICATION_CREDENTIALS`: For Google Service Account auth.
 
 <Tip>
   If you see an error about "command not found," try using the full path to your node executable or `npm` prefix.
@@ -72,7 +79,11 @@ You can configure the server specifically for your workspace using the standard 
                 "args": [
                     "-y",
                     "search-console-mcp"
-                ]
+                ],
+                "env": {
+                    "BING_API_KEY": "your-api-key-here",
+                    "GOOGLE_APPLICATION_CREDENTIALS": "/path/to/your/service-account.json"
+                }
             }
         }
     }

@@ -1,9 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { queryAnalytics } from '../src/tools/analytics.js';
-import * as googleClient from '../src/google-client.js';
+import { queryAnalytics } from '../src/google/tools/analytics.js';
+import * as googleClient from '../src/google/client.js';
 
 // Mock the googleClient module
-vi.mock('../src/google-client.js');
+vi.mock('../src/google/client.js');
 
 describe('queryAnalytics Performance', () => {
   beforeEach(() => {

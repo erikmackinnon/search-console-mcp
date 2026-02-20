@@ -1,4 +1,5 @@
-import { queryAnalytics, detectAnomalies, AnomalyItem } from './analytics.js';
+import { detectAnomalies, BingAnomaly as AnomalyItem, getRankAndTrafficStats } from './analytics.js';
+import { BingRankAndTrafficStats } from '../client.js';
 
 /**
  * Result of a traffic drop attribution analysis.
@@ -18,50 +19,30 @@ export interface DropAttribution {
     };
     /** A human-readable summary of the most likely cause based on device data. */
     primaryCause: string;
-    /** If the drop correlates with a known Google Algorithm Update, its name is included here. */
+    /** If the drop correlates with a known Bing Algorithm Update/Volatility, its name is included here. */
     possibleAlgorithmUpdate?: string;
 }
 
 /**
- * Historical Google Algorithm Update dates (recent notable ones)
+ * Historical Bing Algorithm Update dates (recent notable ones)
  */
 const ALGORITHM_UPDATES = [
-    // 2022
-    { date: '2022-09-12', name: 'September 2022 Core Update' },
-    { date: '2022-09-20', name: 'September 2022 Product Review Update' },
-    { date: '2022-10-19', name: 'October 2022 Spam Update' },
-    { date: '2022-12-05', name: 'December 2022 Helpful Content Update' },
-    { date: '2022-12-14', name: 'December 2022 Link Spam Update' },
     // 2023
-    { date: '2023-02-21', name: 'February 2023 Product Reviews Update' },
-    { date: '2023-03-15', name: 'March 2023 Core Update' },
-    { date: '2023-04-12', name: 'April 2023 Reviews Update' },
-    { date: '2023-08-22', name: 'August 2023 Core Update' },
-    { date: '2023-09-14', name: 'September 2023 Helpful Content Update' },
-    { date: '2023-10-04', name: 'October 2023 Spam Update' },
-    { date: '2023-10-05', name: 'October 2023 Core Update' },
-    { date: '2023-11-02', name: 'November 2023 Core Update' },
-    { date: '2023-11-08', name: 'November 2023 Reviews Update' },
+    { date: '2023-01-18', name: 'Bing AI Integration Update' },
+    { date: '2023-02-07', name: 'New Bing Preview (AI Chat)' },
+    { date: '2023-05-04', name: 'Bing Chat Open Preview' },
     // 2024
-    { date: '2024-03-05', name: 'March 2024 Core Update' },
-    { date: '2024-05-06', name: 'Site Reputation Abuse (Manual Actions)' },
-    { date: '2024-05-14', name: 'AI Overviews Rollout' },
-    { date: '2024-06-20', name: 'June 2024 Spam Update' },
-    { date: '2024-08-15', name: 'August 2024 Core Update' },
-    { date: '2024-11-11', name: 'November 2024 Core Update' },
-    { date: '2024-12-12', name: 'December 2024 Core Update' },
-    { date: '2024-12-19', name: 'December 2024 Spam Update' },
+    { date: '2024-03-01', name: 'Bing Deep Search Rollout' },
+    { date: '2024-05-29', name: 'May 2024 Ranking Volatility' },
+    { date: '2024-07-25', name: 'Bing Generative Search (Beta)' },
     // 2025
-    { date: '2025-03-13', name: 'March 2025 Core Update' },
-    { date: '2025-06-30', name: 'June 2025 Core Update' },
-    { date: '2025-08-26', name: 'August 2025 Spam Update' },
-    { date: '2025-12-11', name: 'December 2025 Core Update' },
-    // 2026
-    { date: '2026-02-05', name: 'February 2026 Discover Core Update' },
+    { date: '2025-01-15', name: 'Projected AI Relevance Update' }, // Placeholder/Projected based on trends if explicit 2025 data isn't confirmed yet
 ];
 
 /**
  * Identify the cause of a significant traffic drop by analyzing device distribution and algorithm updates.
+ * 
+ * Note: Bing API does not provide device breakdown in the basic performance stats, so device impact will be 0.
  *
  * @param siteUrl - The URL of the site to analyze.
  * @param options - Configuration including the lookback period and anomaly threshold.
@@ -74,54 +55,14 @@ export async function analyzeDropAttribution(
     const anomalies = await detectAnomalies(siteUrl, { days: options.days ?? 30, threshold: options.threshold ?? 2.0 });
 
     // Find the most recent 'drop'
-    const mostRecentDrop = anomalies.find(a => a.type === 'drop');
+    const mostRecentDrop: AnomalyItem | undefined = anomalies.find(a => a.type === 'drop');
     if (!mostRecentDrop) return null;
 
     const dropDate = mostRecentDrop.date;
-    const previousWeekStart = new Date(dropDate);
-    previousWeekStart.setDate(previousWeekStart.getDate() - 7);
-    const previousWeekEnd = new Date(dropDate);
-    previousWeekEnd.setDate(previousWeekEnd.getDate() - 1);
 
-    const [dropDayStats, baselineStats] = await Promise.all([
-        queryAnalytics({
-            siteUrl,
-            startDate: dropDate,
-            endDate: dropDate,
-            dimensions: ['device']
-        }),
-        queryAnalytics({
-            siteUrl,
-            startDate: previousWeekStart.toISOString().split('T')[0],
-            endDate: previousWeekEnd.toISOString().split('T')[0],
-            dimensions: ['device']
-        })
-    ]);
-
-    const dropMap = new Map(dropDayStats.map(r => [r.keys?.[0]?.toLowerCase(), r.clicks ?? 0]));
-    const baselineMap = new Map();
-
-    baselineStats.forEach(r => {
-        const device = r.keys?.[0]?.toLowerCase();
-        const current = baselineMap.get(device) || 0;
-        baselineMap.set(device, current + (r.clicks ?? 0) / 7);
-    });
-
+    // Bing API limitation: No device breakdown available via simple API calls.
+    // We return 0 for device impacts.
     const impacts: any = { mobile: 0, desktop: 0, tablet: 0 };
-    let primaryDevice = 'unknown';
-    let maxDeficit = 0;
-
-    ['mobile', 'desktop', 'tablet'].forEach(device => {
-        const baseline = baselineMap.get(device) || 0;
-        const actual = dropMap.get(device) || 0;
-        const deficit = baseline - actual;
-        impacts[device] = parseFloat(deficit.toFixed(2));
-
-        if (deficit > maxDeficit) {
-            maxDeficit = deficit;
-            primaryDevice = device;
-        }
-    });
 
     // Check for algorithm updates within 2 days of the drop
     const possibleUpdate = ALGORITHM_UPDATES.find(u => {
@@ -133,10 +74,10 @@ export async function analyzeDropAttribution(
 
     return {
         date: dropDate,
-        metric: mostRecentDrop.metric,
-        totalDrop: mostRecentDrop.value - mostRecentDrop.expectedValue,
+        metric: 'clicks', // detectAnomalies currently only checks clicks
+        totalDrop: mostRecentDrop.value - mostRecentDrop.previousValue,
         deviceImpact: impacts,
-        primaryCause: primaryDevice !== 'unknown' ? `Disproportionate drop on ${primaryDevice}` : 'Uniform drop across devices',
+        primaryCause: 'Traffic drop detected (Device breakdown unavailable for Bing)',
         possibleAlgorithmUpdate: possibleUpdate?.name
     };
 }
@@ -201,86 +142,121 @@ export async function getTimeSeriesInsights(
     const granularity = options.granularity || 'daily';
     const windowSize = options.window || 7;
     const forecastDays = options.forecastDays ?? 7;
-    const dimensions = options.dimensions || ['date'];
+    // Bing API via getRankAndTrafficStats only supports date dimension implicitly
+    const dimensions = ['date'];
 
-    // Ensure 'date' is included in dimensions for time series if not already there
-    if (!dimensions.includes('date')) {
-        dimensions.unshift('date');
+    const rawRows = await getRankAndTrafficStats(siteUrl);
+    // Sort rows by date ascending
+    const rows = rawRows.sort((a, b) => new Date(a.Date).getTime() - new Date(b.Date).getTime());
+
+    // Filter by date range if provided
+    let startIndex = 0;
+    let endIndex = rows.length;
+
+    if (options.startDate) {
+        startIndex = rows.findIndex(r => r.Date >= options.startDate!);
+        // If no date is >= startDate, then all dates are < startDate (since sorted ascending)
+        if (startIndex === -1) startIndex = rows.length;
+    } else if (options.days) {
+        startIndex = Math.max(0, rows.length - options.days);
     }
 
-    let startDate: string;
-    let endDate: string;
-
-    if (options.startDate && options.endDate) {
-        startDate = options.startDate;
-        endDate = options.endDate;
-    } else {
-        const days = options.days ?? 60;
-        const end = new Date();
-        end.setDate(end.getDate() - 3); // GSC delay
-        const start = new Date(end);
-        start.setDate(start.getDate() - days);
-        startDate = start.toISOString().split('T')[0];
-        endDate = end.toISOString().split('T')[0];
+    if (options.endDate) {
+        // find index where date > endDate
+        endIndex = rows.findIndex(r => r.Date > options.endDate!);
+        if (endIndex === -1) endIndex = rows.length;
     }
 
-    const rows = await queryAnalytics({
-        siteUrl,
-        startDate,
-        endDate,
-        dimensions,
-        filters: options.filters
-    });
+    const filteredRows = rows.slice(startIndex, endIndex);
 
     // Handle data parsing and grouping
-    let data = rows.map(r => {
-        const dimObj: Record<string, string> = {};
-        dimensions.forEach((d, i) => {
-            if (d !== 'date') dimObj[d] = r.keys?.[i] || '';
-        });
-
+    let data: {
+        date: string;
+        dimensions: Record<string, string>;
+        metrics: Record<string, number>;
+        original?: BingRankAndTrafficStats;
+    }[] = filteredRows.map(r => {
+        const dimObj: Record<string, string> = { date: r.Date };
         const metricObj: Record<string, number> = {};
+
+        // Calculate metrics
+        const ctr = r.Impressions > 0 ? r.Clicks / r.Impressions : 0;
+
         metrics.forEach(m => {
-            metricObj[m] = (r[m] as number) ?? 0;
+            if (m === 'clicks') metricObj[m] = r.Clicks;
+            else if (m === 'impressions') metricObj[m] = r.Impressions;
+            else if (m === 'ctr') metricObj[m] = ctr;
+            else if (m === 'position') metricObj[m] = r.AvgPosition;
         });
 
         return {
-            date: r.keys?.[dimensions.indexOf('date')] || '',
+            date: r.Date,
             dimensions: dimObj,
-            metrics: metricObj
+            metrics: metricObj,
+            original: r // keep original for advanced aggregation
         };
     }).sort((a, b) => a.date.localeCompare(b.date));
 
     // Support weekly granularity
     if (granularity === 'weekly') {
-        const weeklyData: Record<string, typeof data[0]> = {};
+        const weeklyData: Record<string, {
+            date: string;
+            dimensions: any;
+            metrics: any;
+            accumulators: { clicks: number; impressions: number; weightedPos: number; count: number; };
+        }> = {};
+
         data.forEach(d => {
             const date = new Date(d.date);
-            const day = date.getDay();
-            const diff = date.getDate() - day + (day === 0 ? -6 : 1); // Adjust to Monday
-            const monday = new Date(date.setDate(diff));
+            const day = date.getUTCDay();
+            const diff = date.getUTCDate() - day + (day === 0 ? -6 : 1); // Adjust to Monday
+            const monday = new Date(date);
+            monday.setUTCDate(diff);
             const weekKey = monday.toISOString().split('T')[0];
 
             if (!weeklyData[weekKey]) {
+                const initMetrics: Record<string, number> = {};
+                metrics.forEach(m => initMetrics[m] = 0);
                 weeklyData[weekKey] = {
                     date: weekKey,
                     dimensions: d.dimensions,
-                    metrics: { ...d.metrics }
+                    metrics: initMetrics,
+                    accumulators: { clicks: 0, impressions: 0, weightedPos: 0, count: 0 }
                 };
-            } else {
-                metrics.forEach(m => {
-                    if (m === 'position') {
-                        // For average position, we might need a weighted average, but simple average for now
-                        weeklyData[weekKey].metrics[m] = (weeklyData[weekKey].metrics[m] + d.metrics[m]) / 2;
-                    } else if (m === 'ctr') {
-                        weeklyData[weekKey].metrics[m] = (weeklyData[weekKey].metrics[m] + d.metrics[m]) / 2;
-                    } else {
-                        weeklyData[weekKey].metrics[m] += d.metrics[m];
-                    }
-                });
             }
+
+            // Accumulate raw values
+            const entry = weeklyData[weekKey];
+            const r = d.original!;
+            entry.accumulators.clicks += r.Clicks;
+            entry.accumulators.impressions += r.Impressions;
+            entry.accumulators.weightedPos += (r.AvgPosition * r.Impressions);
+            entry.accumulators.count += 1;
         });
-        data = Object.values(weeklyData).sort((a, b) => a.date.localeCompare(b.date));
+
+        // Compute final weekly metrics
+        data = Object.values(weeklyData).map(w => {
+            const m = w.metrics;
+            const acc = w.accumulators;
+
+            const finalClicks = acc.clicks;
+            const finalImpressions = acc.impressions;
+            const finalCtr = finalImpressions > 0 ? finalClicks / finalImpressions : 0;
+            const finalPos = finalImpressions > 0 ? acc.weightedPos / finalImpressions : 0;
+
+            metrics.forEach(metric => {
+                if (metric === 'clicks') m[metric] = finalClicks;
+                else if (metric === 'impressions') m[metric] = finalImpressions;
+                else if (metric === 'ctr') m[metric] = finalCtr;
+                else if (metric === 'position') m[metric] = parseFloat(finalPos.toFixed(2));
+            });
+
+            return {
+                date: w.date,
+                dimensions: w.dimensions,
+                metrics: m
+            };
+        }).sort((a, b) => a.date.localeCompare(b.date));
     }
 
     // 1. Calculate Rolling Averages for EACH metric

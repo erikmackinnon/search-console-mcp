@@ -9,8 +9,8 @@ import {
     findQuickWins,
     generateRecommendations,
     findLowHangingFruit
-} from '../src/tools/seo-insights';
-import { clearAnalyticsCache } from '../src/tools/analytics';
+} from '../src/google/tools/seo-insights';
+import { clearAnalyticsCache } from '../src/google/tools/analytics';
 
 describe('SEO Insights Tools', () => {
     beforeEach(() => {

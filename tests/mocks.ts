@@ -23,6 +23,6 @@ export const mockSearchConsoleClient = {
   },
 };
 
-vi.mock('../src/google-client', () => ({
+vi.mock('../src/google/client', () => ({
   getSearchConsoleClient: vi.fn().mockResolvedValue(mockSearchConsoleClient),
 }));
