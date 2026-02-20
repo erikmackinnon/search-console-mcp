@@ -1,6 +1,6 @@
 ---
 title: "Authentication"
-description: "Setting up Google Cloud credentials for Search Console."
+description: "Authentication for Google Search Console and Bing Webmaster Tools."
 ---
 
 To use this MCP server, you must authenticate with the Google Search Console API. We recommend the **Secure Desktop Flow**, which uses your local machine's keychain and hardware-bound encryption to store tokens safely.

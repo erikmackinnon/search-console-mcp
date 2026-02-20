@@ -18,4 +18,4 @@ We don't design for human eyes first; we design for agentic "hands." Our tool ou
 This project is strictly for **Analysis and Intelligence**. We do not include tools for automated content generation or bulk "AI optimization." We believe the most valuable use of AI in SEO is identifying *where* to focus, not mass-producing low-quality content.
 
 ## 5. Security & Privacy
-Your SEO data is one of your most valuable assets. This MCP server is designed to run locally and communicate directly with Google. We will never add telemetry or cloud-processing of your performance data.
+Your SEO data is one of your most valuable assets. This MCP server is designed to run locally and communicate directly with Google and Bing. We will never add telemetry or cloud-processing of your performance data.
